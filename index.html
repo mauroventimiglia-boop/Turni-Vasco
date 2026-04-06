@@ -267,10 +267,121 @@
   <!-- Qui va incluso tutto lo script JS aggiornato -->
   <script>
     // --- STATISTICHE REPE ANNUALI ---
-    // ... Tutto il JS di index.txt ...
+    // Tutto il JS di index.txt qui sotto
+    // (INIZIO CODICE JS DA index.txt)
+        function mostraStatisticheRepe() {
+          document.getElementById('input-anno-repe').value = new Date().getFullYear();
+          document.getElementById('errore-anno-repe').style.display = 'none';
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'flex';
+          setTimeout(() => { document.getElementById('input-anno-repe').focus(); }, 100);
+        }
+
+        function chiudiPopupAnnoRepe() {
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
+        }
+
+        function confermaAnnoRepe() {
+          const anno = Number(document.getElementById('input-anno-repe').value);
+          const errore = document.getElementById('errore-anno-repe');
+          if (!anno || isNaN(anno) || anno < 2020 || anno > 2100) {
+            errore.textContent = "Anno non valido!";
+            errore.style.display = 'block';
+            return;
+          }
+          errore.style.display = 'none';
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
+          mostraLoader(true);
+          // --- PATCH: Sostituisci google.script.run con fetch API ---
+          fetch(API_URL + '?action=getArchivioAnno&anno=' + encodeURIComponent(anno))
+            .then(r => r.json())
+            .then(archivio => {
+              mostraLoader(false);
+              if (!archivio || !Array.isArray(archivio) || archivio.length === 0) {
+                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Nessun dato trovato per l\'anno selezionato.</span>';
+                document.getElementById('popup-statistiche-repe').style.display = 'flex';
+                return;
+              }
+              // archivio: array di oggetti {mese, anno, tabella: [ [header], [row1], ... ]}
+              const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+              const ABBREV_MAP = { 'MACA': 'MACALUSO', 'DINO': 'DINOLFO', 'NAPO': 'NAPOLI', 'VENTI': 'VENTIMIGLIA', 'VENT': 'VENTIMIGLIA' };
+              const stats = {};
+              NOMI.forEach(n => stats[n] = {
+                REP:0,
+                'REP ORE':0,
+                'REP FESTIVI':0,
+                'REP PRIMI10_LV':0,
+                'REP PRIMI10_SD':0
+              });
+              archivio.forEach(meseObj => {
+                const tabella = meseObj.tabella;
+                if (!tabella || tabella.length < 2) return;
+                const header = tabella[0];
+                for (let i = 1; i < tabella.length; i++) {
+                  let nome = (tabella[i][0] || '').toUpperCase();
+                  if (ABBREV_MAP[nome]) nome = ABBREV_MAP[nome];
+                  if (!stats[nome]) continue;
+                  for (let j = 1; j < tabella[i].length; j++) {
+                    const cella = String(tabella[i][j] || '').toUpperCase();
+                    const valori = cella.split(/[\/]/).map(v => v.trim());
+                    if (valori.some(v => v === 'REP')) {
+                      const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+                      if (giornoMatch) {
+                        const giorno = parseInt(giornoMatch[1], 10);
+                        const data = new Date(anno, meseObj.mese-1, giorno);
+                        const day = data.getDay();
+                        let ore = 12;
+                        const festivo = data && (day === 0 || isHoliday(data, getPasqua(meseObj.anno)));
+                        if (festivo) ore = 24;
+                        else if (day === 6) ore = 18;
+                        stats[nome].REP++;
+                        stats[nome]['REP ORE'] += ore;
+                        if (festivo) stats[nome]['REP FESTIVI']++;
+                        if (giorno <= 10) {
+                          if (day >= 1 && day <= 5) stats[nome]['REP PRIMI10_LV']++; // lun-ven
+                          if (day === 0 || day === 6) stats[nome]['REP PRIMI10_SD']++; // dom-sab
+                        }
+                      }
+                    }
+                  }
+                }
+              });
+              let html = `<div style="overflow-x:auto;"><table style="width:680px;min-width:600px;margin-top:1em;font-size:1.13em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;table-layout:fixed;">`;
+              html += '<tr style="background:#e0e7ef;color:#16304d;">'
+                +'<th style="padding:10px 0;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;">TSRM</th>'
+                +'<th style="min-width:90px;">Totale REPE</th>'
+                +'<th style="min-width:90px;">Totale Ore</th>'
+                +'<th style="min-width:110px;">REPE Festività</th>'
+                +'<th style="min-width:140px;">REPE Primi 10g Lun-Ven</th>'
+                +'<th style="min-width:140px;">REPE Primi 10g Sab-Dom</th>'
+              +'</tr>';
+              NOMI.forEach(nome => {
+                html += `<tr>`
+                  +`<td style='color:#333;background:#f4f8fb;text-align:center;vertical-align:middle;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;'>${nome}</td>`
+                  +`<td style='color:#b80000;text-align:center;'>${stats[nome].REP}</td>`
+                  +`<td style='color:#176d1a;text-align:center;'>${stats[nome]['REP ORE']}</td>`
+                  +`<td style='color:#b80000;text-align:center;'>${stats[nome]['REP FESTIVI']}</td>`
+                  +`<td style='color:#007bff;text-align:center;'>${stats[nome]['REP PRIMI10_LV']}</td>`
+                  +`<td style='color:#ff9800;text-align:center;'>${stats[nome]['REP PRIMI10_SD']}</td>`
+                +`</tr>`;
+              });
+              html += '</table></div>';
+              document.getElementById('contenuto-statistiche-repe').innerHTML = html;
+              document.getElementById('popup-statistiche-repe').style.display = 'flex';
+            })
+            .catch(err => {
+              mostraLoader(false);
+              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Errore nel recupero dati: '+(err && err.message ? err.message : err)+'</span>';
+              document.getElementById('popup-statistiche-repe').style.display = 'flex';
+            });
+        }
+
+        function chiudiStatisticheRepe() {
+          document.getElementById('popup-statistiche-repe').style.display = 'none';
+        }
+    // ... Tutto il resto del JS di index.txt ...
+    // (FINE CODICE JS DA index.txt)
     // Imposta l'endpoint API corretto
     const API_URL = "https://script.google.com/macros/s/AKfycbz57oxNbFGzUUGuVohBe6f3vpLAT0ChLV41D_MoTYiL5QArsVupZuLBlFJJmvrrMn1RJg/exec";
-    // (Tutto il codice JS di index.txt è stato inserito qui sopra)
   </script>
 </body>
 </html>
