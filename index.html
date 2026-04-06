@@ -68,12 +68,12 @@
   <div id="tabella-container"></div>
   <script>
     async function caricaDati() {
-      const url = '[https://script.google.com/macros/s/AKfycbwk2qoH7d2b8dJVsN-0A76XWXJL3afiJT8QQ3rowGwyRanMOPwDQIEjbWLhW1t13AyZbg/exec
-      ]';
+      const url = 'https://script.google.com/macros/s/AKfycbxHwxg2dyANtb2NZ51A7ui4Jql48aud_Bqe9QU6V1UEmjUn3xi20Is0244gZA977uH4Hg/exec';
       try {
         const response = await fetch(url);
         if (!response.ok) throw new Error('Errore nel caricamento dati');
         const dati = await response.json();
+        console.log(dati); // Log dei dati ricevuti
         const container = document.getElementById('tabella-container');
         if (!Array.isArray(dati) || dati.length === 0) {
           container.innerHTML = '<p>Nessun dato disponibile.</p>';
@@ -82,11 +82,11 @@
         let html = '<table><thead><tr>';
         dati[0].forEach(col => { html += `<th>${col}</th>`; });
         html += '</tr></thead><tbody>';
-        for (let i = 1; i < dati.length; i++) {
+        dati.slice(1).forEach(riga => {
           html += '<tr>';
-          dati[i].forEach(cell => { html += `<td>${cell}</td>`; });
+          riga.forEach(cell => { html += `<td>${cell}</td>`; });
           html += '</tr>';
-        }
+        });
         html += '</tbody></table>';
         container.innerHTML = html;
       } catch (err) {
