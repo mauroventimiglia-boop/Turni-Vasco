@@ -2,98 +2,131 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turni Tsrm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#1976d2">
-  <title>Turni Ospedalieri</title>
+  <meta name="apple-mobile-web-app-title" content="Turni Tsrm">
+  <meta name="application-name" content="Turni Tsrm">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#2a4d7a">
   <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f4f8fb;
-      margin: 0;
-      color: #1a237e;
+    body { 
+      font-family: Arial, sans-serif; margin: 2em; background-color: #f8fafc; color: #333;
     }
-    header {
-      background: #1976d2;
-      color: #fff;
-      padding: 2rem 1rem 1.2rem 1rem;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-    }
-    h1 {
-      margin: 0;
-      font-size: 2.2rem;
-      letter-spacing: 1px;
-    }
-    #tabella-container {
-      margin: 2rem auto;
-      max-width: 95vw;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(25, 118, 210, 0.07);
-      padding: 1.5rem;
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0 auto;
-      background: #fff;
-    }
-    th, td {
-      padding: 0.7rem 1rem;
-      border-bottom: 1px solid #e3eaf2;
-      text-align: left;
-    }
-    th {
-      background: #e3f0fc;
-      color: #1976d2;
-      font-weight: 600;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    @media (max-width: 600px) {
-      h1 { font-size: 1.3rem; }
-      #tabella-container { padding: 0.5rem; }
-      th, td { padding: 0.5rem 0.3rem; font-size: 0.95rem; }
+    .main-container { display: flex; flex-direction: row; gap: 2em; align-items: flex-start; }
+    .table-container { flex: 1; min-width: 0; contain: content; }
+    .legend-container { width: 320px; padding: 1em; background-color: #f4f8fb; border: 1px solid #e0e7ef; border-radius: 8px; position: sticky; top: 2em; }
+    .legend-container h4 { margin-top: 0; color: #2a4d7a; text-align: center; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
+    th, td { border: 1px solid #b0b0b0; padding: 4px; text-align: center; }
+    th { background: #e0e7ef; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    tr:nth-child(even) { background: #f4f8fb; }
+    tr.festivo { background-color: #ffdddd !important; }
+    .giorno-sett { color: #2a4d7a; font-weight: bold; }
+    .operator-cell div { display: flex; justify-content: center; align-items: center; gap: 4px; }
+    .operator-cell small { font-size: 0.7em; color: #555; }
+    .save-btn { margin-top: 1em; padding: 8px 18px; background: #2a4d7a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; margin-right: 10px; }
+    .save-btn:hover { background: #16304d; }
+    #feedback-message { display: none; margin-top: 1em; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
+    @media (max-width: 900px) {
+      .main-container { flex-direction: column; }
+      .legend-container { width: auto; position: static; margin-top: 1.5em; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Gestione Turni Ospedalieri</h1>
-  </header>
-  <div id="tabella-container"></div>
+  <h2>Gestione Turni</h2>
+  <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
+  <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
+  <button id="carica-btn">Carica Turni</button>
+  <div class="main-container">
+    <div id="output" class="table-container"></div>
+    <div class="legend-container">
+      <h4>Legenda Riepilogo</h4>
+      <div id="legenda-operatori"></div>
+    </div>
+  </div>
+  <div id="feedback-message"></div>
+  <div id="loader-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+      <div class="spinner" style="border:6px solid #e0e7ef;border-top:6px solid #2a4d7a;border-radius:50%;width:54px;height:54px;animation:spin 1s linear infinite;"></div>
+      <span style="color:#2a4d7a;font-weight:bold;font-size:1.1em;">Caricamento turni...</span>
+    </div>
+  </div>
+  <style>@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }</style>
   <script>
-    async function caricaDati() {
-      const url = 'https://script.google.com/macros/s/AKfycbxHwxg2dyANtb2NZ51A7ui4Jql48aud_Bqe9QU6V1UEmjUn3xi20Is0244gZA977uH4Hg/exec';
+    const API_URL = "https://script.google.com/macros/s/AKfycbwLHND9sG-shyXgVsD1o6di3kZ2ytN96APtZamhPgyq20vs0LIB9KJlyIDSjlrkRwwnoA/exec";
+    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+    const GIORNI_SETT = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+
+    function mostraLoader(show) {
+      const loader = document.getElementById('loader-overlay');
+      if (loader) loader.style.display = show ? 'flex' : 'none';
+    }
+
+    document.getElementById('carica-btn').addEventListener('click', caricaTurni);
+
+    async function caricaTurni() {
+      const mese = document.getElementById('mese').value;
+      const anno = document.getElementById('anno').value;
+      if (!mese || !anno) return;
+      mostraLoader(true);
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Errore nel caricamento dati');
-        const dati = await response.json();
-        console.log(dati); // Log dei dati ricevuti
-        const container = document.getElementById('tabella-container');
-        if (!Array.isArray(dati) || dati.length === 0) {
-          container.innerHTML = '<p>Nessun dato disponibile.</p>';
-          return;
-        }
-        let html = '<table><thead><tr>';
-        dati[0].forEach(col => { html += `<th>${col}</th>`; });
-        html += '</tr></thead><tbody>';
-        dati.slice(1).forEach(riga => {
-          html += '<tr>';
-          riga.forEach(cell => { html += `<td>${cell}</td>`; });
-          html += '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      } catch (err) {
-        document.getElementById('tabella-container').innerHTML = `<p style="color:#d32f2f">${err.message}</p>`;
+        const url = `${API_URL}?action=getTurniMese&mese=${mese}&anno=${anno}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Errore HTTP: ' + res.status);
+        const turni = await res.json();
+        mostraTabella(turni, mese, anno);
+      } catch (e) {
+        document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel caricamento dei turni!</span>';
+      } finally {
+        mostraLoader(false);
       }
     }
-    window.addEventListener('DOMContentLoaded', caricaDati);
+
+    function mostraTabella(turni, mese, anno) {
+      if (!turni || !turni.length) {
+        document.getElementById('output').innerHTML = '<b>Nessun turno trovato</b>';
+        return;
+      }
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const titoloMese = `<h3 style='margin-bottom:0.5em;color:#2a4d7a;'>${NOMI_MESI[mese-1]} ${anno}</h3>`;
+      let html = `${titoloMese}<table><tr><th>Giorno</th><th>Settimana</th>${NOMI.map(n => `<th>${n}</th>`).join('')}</tr>`;
+      turni.forEach(t => {
+        const data = new Date(anno, mese - 1, t.giorno);
+        const giornoSett = GIORNI_SETT[data.getDay()];
+        const isDomenica = data.getDay() === 0;
+        const isSabato = data.getDay() === 6;
+        const classeRiga = isDomenica ? ' class="festivo"' : '';
+        html += `<tr${classeRiga}><td>${t.giorno}</td><td class="giorno-sett">${giornoSett}</td>`;
+        NOMI.forEach(nome => {
+          let turno = t[nome] || '';
+          let style = '';
+          if (turno === 'Notte') style = 'background:#b3d1ff;color:#0a2377;font-weight:bold;';
+          else if (turno === 'REP') style = 'background:#ffd6d6;color:#b80000;font-weight:bold;';
+          else if (turno === 'PRO') style = 'background:#b6ffd0;color:#006b2e;font-weight:bold;';
+          html += `<td style='${style}'>${turno}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</table>';
+      document.getElementById('output').innerHTML = html;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const oggi = new Date();
+      document.getElementById('mese').value = oggi.getMonth() + 1;
+      document.getElementById('anno').value = oggi.getFullYear();
+      // Carica subito i turni del mese corrente
+      caricaTurni();
+    });
   </script>
 </body>
 </html>
