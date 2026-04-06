@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#1976d2">
+  <title>Turni Ospedalieri</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f8fb;
+      margin: 0;
+      color: #1a237e;
+    }
+    header {
+      background: #1976d2;
+      color: #fff;
+      padding: 2rem 1rem 1.2rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+    }
+    #tabella-container {
+      margin: 2rem auto;
+      max-width: 95vw;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(25, 118, 210, 0.07);
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+      background: #fff;
+    }
+    th, td {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #e3eaf2;
+      text-align: left;
+    }
+    th {
+      background: #e3f0fc;
+      color: #1976d2;
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.3rem; }
+      #tabella-container { padding: 0.5rem; }
+      th, td { padding: 0.5rem 0.3rem; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestione Turni Ospedalieri</h1>
+  </header>
+  <div id="tabella-container"></div>
+  <script>
+    async function caricaDati() {
+      const url = '[INCOLLA_QUI_IL_TUO_URL_EXEC]';
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Errore nel caricamento dati');
+        const dati = await response.json();
+        const container = document.getElementById('tabella-container');
+        if (!Array.isArray(dati) || dati.length === 0) {
+          container.innerHTML = '<p>Nessun dato disponibile.</p>';
+          return;
+        }
+        let html = '<table><thead><tr>';
+        dati[0].forEach(col => { html += `<th>${col}</th>`; });
+        html += '</tr></thead><tbody>';
+        for (let i = 1; i < dati.length; i++) {
+          html += '<tr>';
+          dati[i].forEach(cell => { html += `<td>${cell}</td>`; });
+          html += '</tr>';
+        }
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      } catch (err) {
+        document.getElementById('tabella-container').innerHTML = `<p style="color:#d32f2f">${err.message}</p>`;
+      }
+    }
+    window.addEventListener('DOMContentLoaded', caricaDati);
+  </script>
+</body>
+</html>
