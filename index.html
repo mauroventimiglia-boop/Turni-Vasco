@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Turni Tsrm</title>
@@ -19,114 +19,256 @@
   <style>
     body { 
       font-family: Arial, sans-serif; margin: 2em; background-color: #f8fafc; color: #333;
+      /* touch-action: manipulation;  RIMOSSO: permette pinch-zoom naturale su mobile */
     }
     .main-container { display: flex; flex-direction: row; gap: 2em; align-items: flex-start; }
     .table-container { flex: 1; min-width: 0; contain: content; }
     .legend-container { width: 320px; padding: 1em; background-color: #f4f8fb; border: 1px solid #e0e7ef; border-radius: 8px; position: sticky; top: 2em; }
     .legend-container h4 { margin-top: 0; color: #2a4d7a; text-align: center; }
+    #legenda-header-row { position: relative; display: flex; align-items: center; justify-content: center; min-height: 38px; margin-bottom: 4px; }
+    #btn-aggiorna-legenda-mobile { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+    .legend-operator { margin-bottom: 1em; border: 1px solid #d1d5db; padding: 0.75em; border-radius: 6px; background-color: #fff; }
+    .legend-operator h5 { margin: 0 0 8px 0; color: #16304d; text-align: center; }
+    .legend-counts { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
+    .legend-counts span { font-size: 0.9em; font-weight: bold; }
+    .legend-counts b { min-width: 15px; display: inline-block; text-align: right; }
     table { border-collapse: collapse; width: 100%; margin-top: 1em; }
     th, td { border: 1px solid #b0b0b0; padding: 4px; text-align: center; }
-    th { background: #e0e7ef; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    th:nth-child(1), td:nth-child(1) { width: 28px; min-width: 28px; max-width: 32px; }
+    th:nth-child(2), td:nth-child(2) { width: 48px; min-width: 40px; max-width: 54px; }
+    th:not(:first-child):not(:nth-child(2)), td:not(:first-child):not(:nth-child(2)) { width: 70px; min-width: 60px; max-width: 90px; }
+    th { 
+      background: #e0e7ef; font-weight: bold; 
+      position: sticky; /* Blocca l'intestazione in alto */
+      top: 0;
+      z-index: 10; }
     tr:nth-child(even) { background: #f4f8fb; }
     tr.festivo { background-color: #ffdddd !important; }
+    select { padding: 2px 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; text-align-last: center; transition: var(--select-transition, background-color 0.3s, color 0.3s); width: 95px; }
     .giorno-sett { color: #2a4d7a; font-weight: bold; }
     .operator-cell div { display: flex; justify-content: center; align-items: center; gap: 4px; }
     .operator-cell small { font-size: 0.7em; color: #555; }
     .save-btn { margin-top: 1em; padding: 8px 18px; background: #2a4d7a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; margin-right: 10px; }
     .save-btn:hover { background: #16304d; }
     #feedback-message { display: none; margin-top: 1em; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
-    @media (max-width: 900px) {
+    .preview-table-wrapper { max-height: 400px; overflow: auto; border: 1px solid #d1d5db; border-radius: 8px; }
+    #preview-container, #archivio-container { margin-top: 2em; }
+    #preview-container h4, #archivio-container h4 { color: #2a4d7a; text-align: center;}
+    #preview-container table, #archivio-container table { width: 100%; border-collapse: collapse; font-size: 0.9em; table-layout: fixed; }
+    #preview-container th, #preview-container td, #archivio-container th, #archivio-container td { border: 1px solid #e5e7eb; padding: 5px; text-align: center; }
+    #preview-container th, #archivio-container th { background-color: #e0e7ef; font-weight: bold; position: sticky; top: 0; z-index: 2; }
+    #preview-container th:first-child, #preview-container td:first-child, #archivio-container th:first-child, #archivio-container td:first-child { position: sticky; left: 0; background-color: #f4f8fb; font-weight: bold; width: 120px; min-width: 100px; max-width: 140px; z-index: 3; }
+    #preview-container th:not(:first-child), #preview-container td:not(:first-child), #archivio-container th:not(:first-child), #archivio-container td:not(:first-child) { width: 38px; min-width: 28px; max-width: 50px; }
+    .header-festivo { color: #dc3545; }
+
+    #archivio-container { padding: 1em; border: 1px solid #e0e7ef; border-radius: 8px; background-color: #f8fafc; }
+    #archivio-container input { margin-bottom: 1em; padding: 4px 8px; }
+    #archivio-lista { list-style-type: none; padding: 0; }
+    #archivio-lista li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
+    #archivio-lista li:hover { background-color: #e0e7ef; }
+    #archivio-preview { margin-top: 1em; }
+
+    @media (max-width: 900px), (hover: none) and (pointer: coarse) {
       .main-container { flex-direction: column; }
       .legend-container { width: auto; position: static; margin-top: 1.5em; }
+      .table-container {
+        contain: none !important;
+      }
+      .table-container, .preview-table-wrapper, #output, #preview-container, #archivio-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100vw;
+      }
+      table {
+        min-width: 420px;
+        max-width: 100vw;
+      }
+      th, td {
+        max-width: 120px;
+        word-break: break-word;
+      }
+      th, td, #preview-container th, #preview-container td, #archivio-container th, #archivio-container td {
+        position: static !important;
+        left: unset !important;
+        z-index: auto !important;
+        background-clip: padding-box;
+      }
     }
+    /* Stile per lo scroll della legenda su schermi con altezza limitata (es. telefono in orizzontale) */
+    @media (max-height: 500px) {
+      #legenda-operatori { max-height: calc(100vh - 200px); overflow-y: auto; }
+      body { font-size: 14px; margin: 1em; }
+      select { width: 85px; font-size: 0.9em; }
+      .save-btn { font-size: 0.9em; }
+    }
+
+    /* Solo mobile verticale: testi giorno/settimana sempre leggibili + scroll piu fluido */
+    @media (orientation: portrait) and (max-width: 900px) {
+      html, body {
+        height: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: auto;
+      }
+      .table-container {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: auto;
+        contain: none;
+        overscroll-behavior: auto;
+      }
+      #output {
+        overflow: visible !important;
+        content-visibility: visible;
+        contain-intrinsic-size: auto;
+        overscroll-behavior-y: auto;
+      }
+      #output select {
+        transition: none;
+      }
+      #output th:nth-child(1),
+      #output td:nth-child(1) {
+        width: 32px;
+        min-width: 32px;
+        max-width: 36px;
+      }
+      #output th:nth-child(2),
+      #output td:nth-child(2) {
+        width: 50px;
+        min-width: 46px;
+        max-width: 56px;
+      }
+      #output td.giorno-sett {
+        font-size: 0.76em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #output th:nth-child(1),
+      #output th:nth-child(2) {
+        font-size: 0;
+      }
+      #output th:nth-child(1)::after {
+        content: 'G';
+        font-size: 10px;
+        font-weight: bold;
+      }
+      #output th:nth-child(2)::after {
+        content: 'Sett.';
+        font-size: 10px;
+        font-weight: bold;
+      }
+      #legenda-header-row {
+        flex-direction: column !important;
+        gap: 8px;
+      }
+      #btn-aggiorna-legenda-mobile {
+        position: static !important;
+        transform: none !important;
+      }
+    }
+
+
   </style>
 </head>
 <body>
-  <h2>Gestione Turni</h2>
-  <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
-  <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
-  <button id="carica-btn">Carica Turni</button>
-  <div class="main-container">
-    <div id="output" class="table-container"></div>
-    <div class="legend-container">
-      <h4>Legenda Riepilogo</h4>
-      <div id="legenda-operatori"></div>
-    </div>
-  </div>
-  <div id="feedback-message"></div>
+  <!-- Loader visivo -->
   <div id="loader-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);z-index:9999;align-items:center;justify-content:center;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
       <div class="spinner" style="border:6px solid #e0e7ef;border-top:6px solid #2a4d7a;border-radius:50%;width:54px;height:54px;animation:spin 1s linear infinite;"></div>
       <span style="color:#2a4d7a;font-weight:bold;font-size:1.1em;">Caricamento turni...</span>
     </div>
   </div>
-  <style>@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }</style>
+  <style>
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+  </style>
+  <h2>Gestione Turni</h2>
+  <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
+  <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
+  <button onclick="caricaTurni()">Carica Turni</button>
+  <button id="pulisci-tabella-btn" onclick="pulisciTabella()" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
+  <button onclick="salvaTurniManuale()" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
+  <span id="salva-turni-feedback" style="display:none;font-size:0.82em;font-weight:600;margin-left:6px;"></span>
+  
+  <!-- Popup di conferma personalizzato -->
+  <div id="custom-confirm-popup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:4000;align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:400px;width:90vw;box-shadow:0 2px 16px #0003;text-align:center;">
+      <p id="custom-confirm-msg" style="font-size:1.1em;color:#333;margin:0 0 1.5em 0;">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
+      <div style="display:flex;gap:16px;justify-content:center;">
+        <button id="custom-confirm-ok" class="save-btn" style="background-color:#dc3545;">Conferma</button>
+        <button id="custom-confirm-cancel" class="save-btn" style="background-color:#6c757d;">Annulla</button>
+      </div>
+    </div>
+  </div>
+  <div class="main-container">
+    <div id="output" class="table-container"></div>
+    <div class="legend-container">
+            <!-- Popup input anno statistiche REPE -->
+            <div id="popup-inserisci-anno-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:3000;align-items:center;justify-content:center;">
+              <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:340px;width:96vw;box-shadow:0 2px 16px #0002;position:relative;display:flex;flex-direction:column;align-items:center;">
+                <h3 style="color:#b80000;text-align:center;margin-top:0;margin-bottom:1em;font-size:1.15em;">Inserisci l'anno per le statistiche REPE</h3>
+                <input id="input-anno-repe" type="number" min="2020" max="2100" value="" placeholder="es: 2026" style="font-size:1.1em;padding:7px 12px;border-radius:6px;border:1px solid #bbb;width:120px;text-align:center;outline:none;">
+                <div style="margin-top:1.5em;display:flex;gap:16px;justify-content:center;width:100%;">
+                  <button onclick="confermaAnnoRepe()" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
+                  <button onclick="chiudiPopupAnnoRepe()" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
+                </div>
+                <span id="errore-anno-repe" style="display:none;color:#b80000;font-weight:bold;margin-top:1em;font-size:1em;"></span>
+              </div>
+            </div>
+      <div id="legenda-header-row" style="position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;">
+        <h4 style="margin:0;color:#2a4d7a;text-align:center;width:100%;">Legenda Riepilogo</h4>
+        <button id="btn-aggiorna-legenda-mobile" type="button" onclick="aggiornaLegendaManuale()" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
+      </div>
+      <div id="legenda-feedback" style="display:none;text-align:center;font-size:0.85em;color:#b26a00;font-weight:600;margin:6px 0 0 0;">Legenda da aggiornare</div>
+      <div id="legenda-operatori"></div>
+      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;" onclick="mostraStatisticheRepe()">Statistiche REPE annuali</button>
+      <div id="popup-statistiche-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:480px;width:98vw;box-shadow:0 2px 16px #0002;position:relative;">
+          <h3 style="color:#b80000;text-align:center;margin-top:0;">Statistiche REPE annuali</h3>
+          <div id="contenuto-statistiche-repe"></div>
+          <div style="text-align:right;margin-top:1.5em;">
+            <button onclick="chiudiStatisticheRepe()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="preview-container"></div>
+  <div id="progetto-backup-container" style="margin-top:2em;"></div>
+  <button class="save-btn" onclick="generaAnteprimaBackup()">Genera Anteprima Backup</button>
+  <button id="conferma-salvataggio-btn" class="save-btn" onclick="confermaSalvataggioBackup()" style="display: none; background-color: #28a745;">Conferma e Salva</button>
+  <button id="chiudi-anteprima-btn" class="save-btn" onclick="chiudiAnteprima()" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
+  <button class="save-btn" onclick="toggleArchivio()" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
+  <div id="feedback-message"></div>
+  <div id="archivio-container" style="display: none;">
+    <h4>Archivio Turni Salvati</h4>
+    <label>Mese: 
+      <select id="archivio-filtro-mese">
+        <option value="">--</option>
+        <option value="1">Gennaio</option>
+        <option value="2">Febbraio</option>
+        <option value="3">Marzo</option>
+        <option value="4">Aprile</option>
+        <option value="5">Maggio</option>
+        <option value="6">Giugno</option>
+        <option value="7">Luglio</option>
+        <option value="8">Agosto</option>
+        <option value="9">Settembre</option>
+        <option value="10">Ottobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Dicembre</option>
+      </select>
+    </label>
+    <label>Anno: <input type="number" id="archivio-filtro-anno" min="2020" max="2100" style="width:80px;"></label>
+    <button onclick="cercaArchivio()">Cerca</button>
+    <div id="reperibilita-container" style="margin-top: 1.5em;"></div>
+    <div id="archivio-preview"></div>
+  </div>
+  <!-- Qui va incluso tutto lo script JS aggiornato -->
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwruyIIknQLblyC-hl4LhwcKHao9hLqjlKsbHcCnIweczQf1D7B5-13TDmwD59-DkAUXg/exec";
-    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-    const GIORNI_SETT = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-
-    function mostraLoader(show) {
-      const loader = document.getElementById('loader-overlay');
-      if (loader) loader.style.display = show ? 'flex' : 'none';
-    }
-
-    document.getElementById('carica-btn').addEventListener('click', caricaTurni);
-
-    async function caricaTurni() {
-      const mese = document.getElementById('mese').value;
-      const anno = document.getElementById('anno').value;
-      if (!mese || !anno) return;
-      mostraLoader(true);
-      try {
-        const url = `${API_URL}?action=getTurniMese&mese=${mese}&anno=${anno}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Errore HTTP: ' + res.status);
-        const turni = await res.json();
-        mostraTabella(turni, mese, anno);
-      } catch (e) {
-        document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel caricamento dei turni!</span>';
-      } finally {
-        mostraLoader(false);
-      }
-    }
-
-    function mostraTabella(turni, mese, anno) {
-      if (!turni || !turni.length) {
-        document.getElementById('output').innerHTML = '<b>Nessun turno trovato</b>';
-        return;
-      }
-      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
-      const titoloMese = `<h3 style='margin-bottom:0.5em;color:#2a4d7a;'>${NOMI_MESI[mese-1]} ${anno}</h3>`;
-      let html = `${titoloMese}<table><tr><th>Giorno</th><th>Settimana</th>${NOMI.map(n => `<th>${n}</th>`).join('')}</tr>`;
-      turni.forEach(t => {
-        const data = new Date(anno, mese - 1, t.giorno);
-        const giornoSett = GIORNI_SETT[data.getDay()];
-        const isDomenica = data.getDay() === 0;
-        const isSabato = data.getDay() === 6;
-        const classeRiga = isDomenica ? ' class="festivo"' : '';
-        html += `<tr${classeRiga}><td>${t.giorno}</td><td class="giorno-sett">${giornoSett}</td>`;
-        NOMI.forEach(nome => {
-          let turno = t[nome] || '';
-          let style = '';
-          if (turno === 'Notte') style = 'background:#b3d1ff;color:#0a2377;font-weight:bold;';
-          else if (turno === 'REP') style = 'background:#ffd6d6;color:#b80000;font-weight:bold;';
-          else if (turno === 'PRO') style = 'background:#b6ffd0;color:#006b2e;font-weight:bold;';
-          html += `<td style='${style}'>${turno}</td>`;
-        });
-        html += '</tr>';
-      });
-      html += '</table>';
-      document.getElementById('output').innerHTML = html;
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const oggi = new Date();
-      document.getElementById('mese').value = oggi.getMonth() + 1;
-      document.getElementById('anno').value = oggi.getFullYear();
-      // Carica subito i turni del mese corrente
-      caricaTurni();
-    });
+    // ... Tutto il JS di index.txt ...
+    // Imposta l'endpoint API corretto
+    const API_URL = "https://script.google.com/macros/s/AKfycbz57oxNbFGzUUGuVohBe6f3vpLAT0ChLV41D_MoTYiL5QArsVupZuLBlFJJmvrrMn1RJg/exec";
   </script>
 </body>
 </html>
