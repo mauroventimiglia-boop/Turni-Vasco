@@ -1,303 +1,39 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Turni Vasco</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Turni Vasco">
-  <meta name="application-name" content="Turni Vasco">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="theme-color" content="#2a4d7a">
-  <style>
-    body { 
-      font-family: Arial, sans-serif; margin: 2em; background-color: #f8fafc; color: #333;
-      /* touch-action: manipulation;  RIMOSSO: permette pinch-zoom naturale su mobile */
-    }
-    .main-container { display: flex; flex-direction: row; gap: 2em; align-items: flex-start; }
-    .table-container { flex: 1; min-width: 0; contain: content; }
-    .legend-container { width: 320px; padding: 1em; background-color: #f4f8fb; border: 1px solid #e0e7ef; border-radius: 8px; position: sticky; top: 2em; }
-    .legend-container h4 { margin-top: 0; color: #2a4d7a; text-align: center; }
-    #legenda-header-row { position: relative; display: flex; align-items: center; justify-content: center; min-height: 38px; margin-bottom: 4px; }
-    #btn-aggiorna-legenda-mobile { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
-    .legend-operator { margin-bottom: 1em; border: 1px solid #d1d5db; padding: 0.75em; border-radius: 6px; background-color: #fff; }
-    .legend-operator h5 { margin: 0 0 8px 0; color: #16304d; text-align: center; }
-    .legend-counts { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
-    .legend-counts span { font-size: 0.9em; font-weight: bold; }
-    .legend-counts b { min-width: 15px; display: inline-block; text-align: right; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
-    th, td { border: 1px solid #b0b0b0; padding: 4px; text-align: center; }
-    th:nth-child(1), td:nth-child(1) { width: 28px; min-width: 28px; max-width: 32px; }
-    th:nth-child(2), td:nth-child(2) { width: 48px; min-width: 40px; max-width: 54px; }
-    th:not(:first-child):not(:nth-child(2)), td:not(:first-child):not(:nth-child(2)) { width: 70px; min-width: 60px; max-width: 90px; }
-    th { 
-      background: #e0e7ef; font-weight: bold; 
-      position: sticky; /* Blocca l'intestazione in alto */
-      top: 0;
-      z-index: 10; }
-    tr:nth-child(even) { background: #f4f8fb; }
-    tr.festivo { background-color: #ffdddd !important; }
-    select { padding: 2px 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; text-align-last: center; transition: var(--select-transition, background-color 0.3s, color 0.3s); width: 95px; }
-    .giorno-sett { color: #2a4d7a; font-weight: bold; }
-    .operator-cell div { display: flex; justify-content: center; align-items: center; gap: 4px; }
-    .operator-cell small { font-size: 0.7em; color: #555; }
-    .save-btn { margin-top: 1em; padding: 8px 18px; background: #2a4d7a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; margin-right: 10px; }
-    .save-btn:hover { background: #16304d; }
-    #feedback-message { display: none; margin-top: 1em; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }
-    .preview-table-wrapper { max-height: 400px; overflow: auto; border: 1px solid #d1d5db; border-radius: 8px; }
-    #preview-container, #archivio-container { margin-top: 2em; }
-    #preview-container h4, #archivio-container h4 { color: #2a4d7a; text-align: center;}
-    #preview-container table, #archivio-container table { width: 100%; border-collapse: collapse; font-size: 0.9em; table-layout: fixed; }
-    #preview-container th, #preview-container td, #archivio-container th, #archivio-container td { border: 1px solid #e5e7eb; padding: 5px; text-align: center; }
-    #preview-container th, #archivio-container th { background-color: #e0e7ef; font-weight: bold; position: sticky; top: 0; z-index: 2; }
-    #preview-container th:first-child, #preview-container td:first-child, #archivio-container th:first-child, #archivio-container td:first-child { position: sticky; left: 0; background-color: #f4f8fb; font-weight: bold; width: 120px; min-width: 100px; max-width: 140px; z-index: 3; }
-    #preview-container th:not(:first-child), #preview-container td:not(:first-child), #archivio-container th:not(:first-child), #archivio-container td:not(:first-child) { width: 38px; min-width: 28px; max-width: 50px; }
-    .header-festivo { color: #dc3545; }
-
-    #archivio-container { padding: 1em; border: 1px solid #e0e7ef; border-radius: 8px; background-color: #f8fafc; }
-    #archivio-container input { margin-bottom: 1em; padding: 4px 8px; }
-    #archivio-lista { list-style-type: none; padding: 0; }
-    #archivio-lista li { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; }
-    #archivio-lista li:hover { background-color: #e0e7ef; }
-    #archivio-preview { margin-top: 1em; }
-
-    @media (max-width: 900px), (hover: none) and (pointer: coarse) {
-      .main-container { flex-direction: column; }
-      .legend-container { width: auto; position: static; margin-top: 1.5em; }
-      .table-container {
-        contain: none !important;
-      }
-      .table-container, .preview-table-wrapper, #output, #preview-container, #archivio-container {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        max-width: 100vw;
-      }
-      table {
-        min-width: 420px;
-        max-width: 100vw;
-      }
-      th, td {
-        max-width: 120px;
-        word-break: break-word;
-      }
-      th, td, #preview-container th, #preview-container td, #archivio-container th, #archivio-container td {
-        position: static !important;
-        left: unset !important;
-        z-index: auto !important;
-        background-clip: padding-box;
-      }
-    }
-    /* Stile per lo scroll della legenda su schermi con altezza limitata (es. telefono in orizzontale) */
-    @media (max-height: 500px) {
-      #legenda-operatori { max-height: calc(100vh - 200px); overflow-y: auto; }
-      body { font-size: 14px; margin: 1em; }
-      select { width: 85px; font-size: 0.9em; }
-      .save-btn { font-size: 0.9em; }
-    }
-
-    /* Solo mobile verticale: testi giorno/settimana sempre leggibili + scroll piu fluido */
-    @media (orientation: portrait) and (max-width: 900px) {
-      html, body {
-        height: auto;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-y: auto;
-      }
-      .table-container {
-        overflow-x: auto !important;
-        overflow-y: visible !important;
-        -webkit-overflow-scrolling: auto;
-        contain: none;
-        overscroll-behavior: auto;
-      }
-      #output {
-        overflow: visible !important;
-        content-visibility: visible;
-        contain-intrinsic-size: auto;
-        overscroll-behavior-y: auto;
-      }
-      #output select {
-        transition: none;
-      }
-      #output th:nth-child(1),
-      #output td:nth-child(1) {
-        width: 32px;
-        min-width: 32px;
-        max-width: 36px;
-      }
-      #output th:nth-child(2),
-      #output td:nth-child(2) {
-        width: 50px;
-        min-width: 46px;
-        max-width: 56px;
-      }
-      #output td.giorno-sett {
-        font-size: 0.76em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      #output th:nth-child(1),
-      #output th:nth-child(2) {
-        font-size: 0;
-      }
-      #output th:nth-child(1)::after {
-        content: 'G';
-        font-size: 10px;
-        font-weight: bold;
-      }
-      #output th:nth-child(2)::after {
-        content: 'Sett.';
-        font-size: 10px;
-        font-weight: bold;
-      }
-      #legenda-header-row {
-        flex-direction: column !important;
-        gap: 8px;
-      }
-      #btn-aggiorna-legenda-mobile {
-        position: static !important;
-        transform: none !important;
-      }
-    }
-
-
-  </style>
-</head>
-<body>
-  <!-- Loader visivo -->
-  <div id="loader-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);z-index:9999;align-items:center;justify-content:center;">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
-      <div class="spinner" style="border:6px solid #e0e7ef;border-top:6px solid #2a4d7a;border-radius:50%;width:54px;height:54px;animation:spin 1s linear infinite;"></div>
-      <span style="color:#2a4d7a;font-weight:bold;font-size:1.1em;">Caricamento turni...</span>
-    </div>
-  </div>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Turni</title>
   <style>
     @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
   </style>
+</head>
+<body>
   <h2>Gestione Turni</h2>
   <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
   <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
   <button onclick="caricaTurni()">Carica Turni</button>
-  <button id="pulisci-tabella-btn" onclick="pulisciTabella()" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
-  <button onclick="salvaTurniManuale()" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
-  <span id="salva-turni-feedback" style="display:none;font-size:0.82em;font-weight:600;margin-left:6px;"></span>
-  
+  <button id="pulisci-tabella-btn" onclick="pulisciTabella()">Pulisci Turni Mese</button>
+  <button onclick="salvaTurniManuale()" class="save-btn">Salva Turni &#128190;</button>
+  <span id="salva-turni-feedback"></span>
   <!-- Popup di conferma personalizzato -->
-  <div id="custom-confirm-popup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:4000;align-items:center;justify-content:center;">
-    <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:400px;width:90vw;box-shadow:0 2px 16px #0003;text-align:center;">
-      <p id="custom-confirm-msg" style="font-size:1.1em;color:#333;margin:0 0 1.5em 0;">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
-      <div style="display:flex;gap:16px;justify-content:center;">
-        <button id="custom-confirm-ok" class="save-btn" style="background-color:#dc3545;">Conferma</button>
-        <button id="custom-confirm-cancel" class="save-btn" style="background-color:#6c757d;">Annulla</button>
+  <div id="custom-confirm-popup">
+    <div class="popup-inner">
+      <p id="custom-confirm-msg">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
+      <div class="flex-row">
+        <button id="custom-confirm-ok" class="save-btn">Conferma</button>
+        <button id="custom-confirm-cancel" class="save-btn">Annulla</button>
       </div>
     </div>
   </div>
-  <div class="main-container">
-    <div id="output" class="table-container"></div>
-    <div class="legend-container">
-            <!-- Popup input anno statistiche REPE -->
-            <div id="popup-inserisci-anno-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:3000;align-items:center;justify-content:center;">
-              <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:340px;width:96vw;box-shadow:0 2px 16px #0002;position:relative;display:flex;flex-direction:column;align-items:center;">
-                <h3 style="color:#b80000;text-align:center;margin-top:0;margin-bottom:1em;font-size:1.15em;">Inserisci l'anno per le statistiche REPE</h3>
-                <input id="input-anno-repe" type="number" min="2020" max="2100" value="" placeholder="es: 2026" style="font-size:1.1em;padding:7px 12px;border-radius:6px;border:1px solid #bbb;width:120px;text-align:center;outline:none;">
-                <div style="margin-top:1.5em;display:flex;gap:16px;justify-content:center;width:100%;">
-                  <button onclick="confermaAnnoRepe()" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
-                  <button onclick="chiudiPopupAnnoRepe()" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
-                </div>
-                <span id="errore-anno-repe" style="display:none;color:#b80000;font-weight:bold;margin-top:1em;font-size:1em;"></span>
-              </div>
-            </div>
-      <div id="legenda-header-row" style="position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;">
-        <h4 style="margin:0;color:#2a4d7a;text-align:center;width:100%;">Legenda Riepilogo</h4>
-        <button id="btn-aggiorna-legenda-mobile" type="button" onclick="aggiornaLegendaManuale()" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
-      </div>
-      <div id="legenda-feedback" style="display:none;text-align:center;font-size:0.85em;color:#b26a00;font-weight:600;margin:6px 0 0 0;">Legenda da aggiornare</div>
-      <div id="legenda-operatori"></div>
-      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;" onclick="mostraStatisticheRepe()">Statistiche REPE annuali</button>
-      <div id="popup-statistiche-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;align-items:center;justify-content:center;">
-        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:480px;width:98vw;box-shadow:0 2px 16px #0002;position:relative;">
-          <h3 style="color:#b80000;text-align:center;margin-top:0;">Statistiche REPE annuali</h3>
-          <div id="contenuto-statistiche-repe"></div>
-          <div style="text-align:right;margin-top:1.5em;">
-            <button onclick="chiudiStatisticheRepe()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="preview-container"></div>
-  <div id="progetto-backup-container" style="margin-top:2em;"></div>
-  <button class="save-btn" onclick="generaAnteprimaBackup()">Genera Anteprima Backup</button>
-  <button id="conferma-salvataggio-btn" class="save-btn" onclick="confermaSalvataggioBackup()" style="display: none; background-color: #28a745;">Conferma e Salva</button>
-  <button id="chiudi-anteprima-btn" class="save-btn" onclick="chiudiAnteprima()" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
-  <button class="save-btn" onclick="toggleArchivio()" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
-  <div id="feedback-message"></div>
-  <div id="archivio-container" style="display: none;">
-    <h4>Archivio Turni Salvati</h4>
-    <label>Mese: 
-      <select id="archivio-filtro-mese">
-        <option value="">--</option>
-        <option value="1">Gennaio</option>
-        <option value="2">Febbraio</option>
-        <option value="3">Marzo</option>
-        <option value="4">Aprile</option>
-        <option value="5">Maggio</option>
-        <option value="6">Giugno</option>
-        <option value="7">Luglio</option>
-        <option value="8">Agosto</option>
-        <option value="9">Settembre</option>
-        <option value="10">Ottobre</option>
-        <option value="11">Novembre</option>
-        <option value="12">Dicembre</option>
-      </select>
-    </label>
-    <label>Anno: <input type="number" id="archivio-filtro-anno" min="2020" max="2100" style="width:80px;"></label>
-    <button onclick="cercaArchivio()">Cerca</button>
-    <div id="reperibilita-container" style="margin-top: 1.5em;"></div>
-    <div id="archivio-preview"></div>
-  </div>
-  <!-- Qui va incluso tutto lo script JS aggiornato -->
-  <script>
-    // --- STATISTICHE REPE ANNUALI ---
-    // Tutto il JS di index.txt qui sotto
-    // (INIZIO CODICE JS DA index.txt)
-        function mostraStatisticheRepe() {
-          document.getElementById('input-anno-repe').value = new Date().getFullYear();
-          document.getElementById('errore-anno-repe').style.display = 'none';
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'flex';
-          setTimeout(() => { document.getElementById('input-anno-repe').focus(); }, 100);
-        }
 
-        function chiudiPopupAnnoRepe() {
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
-        }
-
-        function confermaAnnoRepe() {
-          const anno = Number(document.getElementById('input-anno-repe').value);
-          const errore = document.getElementById('errore-anno-repe');
-          if (!anno || isNaN(anno) || anno < 2020 || anno > 2100) {
-            errore.textContent = "Anno non valido!";
-            errore.style.display = 'block';
-            return;
-          }
-          errore.style.display = 'none';
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
-          mostraLoader(true);
-          // --- PATCH: Sostituisci google.script.run con fetch API ---
-          fetch(API_URL + '?action=getArchivioAnno&anno=' + encodeURIComponent(anno))
-            .then(r => r.json())
-            .then(archivio => {
+    }
+            .then(json => {
               mostraLoader(false);
-              if (!archivio || !Array.isArray(archivio) || archivio.length === 0) {
-                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Nessun dato trovato per l\'anno selezionato.</span>';
+              const archivio = (json && json.ok && Array.isArray(json.data)) ? json.data : [];
+              if (!archivio || archivio.length === 0) {
+                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span class="text-warning">Nessun dato trovato per l\'anno selezionato.</span>';
                 document.getElementById('popup-statistiche-repe').style.display = 'flex';
                 return;
               }
@@ -327,7 +63,7 @@
                       const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
                       if (giornoMatch) {
                         const giorno = parseInt(giornoMatch[1], 10);
-                        const data = new Date(anno, meseObj.mese-1, giorno);
+                        const data = new Date(meseObj.anno, meseObj.mese-1, giorno);
                         const day = data.getDay();
                         let ore = 12;
                         const festivo = data && (day === 0 || isHoliday(data, getPasqua(meseObj.anno)));
@@ -345,43 +81,1734 @@
                   }
                 }
               });
-              let html = `<div style="overflow-x:auto;"><table style="width:680px;min-width:600px;margin-top:1em;font-size:1.13em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;table-layout:fixed;">`;
-              html += '<tr style="background:#e0e7ef;color:#16304d;">'
-                +'<th style="padding:10px 0;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;">TSRM</th>'
-                +'<th style="min-width:90px;">Totale REPE</th>'
-                +'<th style="min-width:90px;">Totale Ore</th>'
-                +'<th style="min-width:110px;">REPE Festività</th>'
-                +'<th style="min-width:140px;">REPE Primi 10g Lun-Ven</th>'
-                +'<th style="min-width:140px;">REPE Primi 10g Sab-Dom</th>'
+              let html = `<div class="overflow-x-auto"><table class="table-shadow table-radius table-main">`;
+              html += '<tr class="bg-table-header">'
+                +'<th class="table-header">TSRM</th>'
+                +'<th class="table-header table-header-small">Totale REPE</th>'
+                +'<th class="table-header table-header-small">Totale Ore</th>'
+                +'<th class="table-header table-header-medium">REPE Festività</th>'
+                +'<th class="table-header table-header-large">REPE Primi 10g Lun-Ven</th>'
+                +'<th class="table-header table-header-large">REPE Primi 10g Sab-Dom</th>'
               +'</tr>';
-              NOMI.forEach(nome => {
-                html += `<tr>`
-                  +`<td style='color:#333;background:#f4f8fb;text-align:center;vertical-align:middle;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;'>${nome}</td>`
-                  +`<td style='color:#b80000;text-align:center;'>${stats[nome].REP}</td>`
-                  +`<td style='color:#176d1a;text-align:center;'>${stats[nome]['REP ORE']}</td>`
-                  +`<td style='color:#b80000;text-align:center;'>${stats[nome]['REP FESTIVI']}</td>`
-                  +`<td style='color:#007bff;text-align:center;'>${stats[nome]['REP PRIMI10_LV']}</td>`
-                  +`<td style='color:#ff9800;text-align:center;'>${stats[nome]['REP PRIMI10_SD']}</td>`
-                +`</tr>`;
-              });
-              html += '</table></div>';
+              // ...
               document.getElementById('contenuto-statistiche-repe').innerHTML = html;
               document.getElementById('popup-statistiche-repe').style.display = 'flex';
             })
-            .catch(err => {
+            .catch(() => {
               mostraLoader(false);
-              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Errore nel recupero dati: '+(err && err.message ? err.message : err)+'</span>';
+              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span class="text-warning">Errore nel caricamento delle statistiche!</span>';
               document.getElementById('popup-statistiche-repe').style.display = 'flex';
             });
-        }
+              +'<th class="table-header-large">REPE Primi 10g Sab-Dom</th>'
+            +'</tr>';
+            NOMI.forEach(nome => {
+              html += `<tr>`
+                +`<td class='table-cell bg-lightblue text-center fw-normal'>${nome}</td>`
+                +`<td class='text-warning text-center'>${stats[nome].REP}</td>`
+                +`<td class='text-success text-center'>${stats[nome]['REP ORE']}</td>`
+                +`<td class='text-warning text-center'>${stats[nome]['REP FESTIVI']}</td>`
+                +`<td class='color-info text-center'>${stats[nome]['REP PRIMI10_LV']}</td>`
+                +`<td class='color-warning text-center'>${stats[nome]['REP PRIMI10_SD']}</td>`
+              +`</tr>`;
+            });
+            html += '</table></div>';
+            document.getElementById('contenuto-statistiche-repe').innerHTML = html;
+            document.getElementById('popup-statistiche-repe').style.display = 'flex';
+          // catch già gestito nella fetch
 
         function chiudiStatisticheRepe() {
           document.getElementById('popup-statistiche-repe').style.display = 'none';
         }
-    // ... Tutto il resto del JS di index.txt ...
-    // (FINE CODICE JS DA index.txt)
-    // Imposta l'endpoint API corretto
-    const API_URL = "https://script.google.com/macros/s/AKfycbz57oxNbFGzUUGuVohBe6f3vpLAT0ChLV41D_MoTYiL5QArsVupZuLBlFJJmvrrMn1RJg/exec";
+    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+    const GIORNI_SETT = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    // Mesi in cui RR è abilitato (giugno, luglio, agosto, settembre)
+    const MESI_RR = [6,7,8,9];
+    let datiBackupDaSalvare = null;
+
+    // --- Performance Optimization: Global State Management ---
+    let currentSelections = {}; // Object to hold the state of all select elements {id: value}
+    let currentTurniData = [];  // Array to hold the raw data for the current month's shifts
+    let meseCorrente, annoCorrente;
+
+    let saveTimeout = null; // Variabile per il timeout del salvataggio automatico
+    let localStorageSaveTimeout = null;
+    let legendaUpdateTimeout = null;
+    let legendaUpdateInFrame = false;
+    let legendaDirty = false;
+    let legendaFeedbackTimeout = null;
+    let orientationStabilizeTimeout = null;
+    let selectTransitionResumeTimeout = null;
+    let viewportChangeTimeout = null;
+    let ultimaOrientazione = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+
+    function isLandscapeCompatta() {
+      return window.matchMedia('(orientation: landscape)').matches && window.innerHeight <= 500;
+    }
+
+    function isPortraitMobile() {
+      const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+      const isNarrow = window.innerWidth <= 1200;
+      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+      return isPortrait && isNarrow && isTouch;
+    }
+
+    function isMobileDevice() {
+      const userAgent = (navigator.userAgent || '').toLowerCase();
+      const isMobileUA = /android|iphone|ipad|ipod|mobile/.test(userAgent);
+      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+      return isMobileUA || (isTouch && window.innerWidth <= 1024);
+    }
+
+    function aggiornaControlliLegendaMobile() {
+      const btn = document.getElementById('btn-aggiorna-legenda-mobile');
+      const feedback = document.getElementById('legenda-feedback');
+      if (!btn || !feedback) return;
+
+      if (isMobileDevice()) {
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.textContent = legendaDirty ? 'Aggiorna *' : 'Aggiorna';
+
+        if (legendaDirty) {
+          feedback.style.display = 'block';
+          feedback.style.color = '#b26a00';
+          feedback.textContent = 'Legenda da aggiornare';
+        }
+      } else {
+        btn.style.display = 'none';
+        feedback.style.display = 'none';
+      }
+    }
+
+    function segnalaLegendaDaAggiornare() {
+      legendaDirty = true;
+      aggiornaControlliLegendaMobile();
+    }
+
+    function segnalaModificheDaSalvare() {
+      if (!isMobileDevice()) return;
+      const feedback = document.getElementById('salva-turni-feedback');
+      if (!feedback) return;
+      feedback.style.display = 'inline';
+      feedback.style.color = '#b26a00';
+      feedback.textContent = 'Modifiche da salvare';
+    }
+
+    function aggiornaLegendaManuale() {
+      aggiornaLegenda();
+      const feedback = document.getElementById('legenda-feedback');
+      if (feedback && isMobileDevice()) {
+        clearTimeout(legendaFeedbackTimeout);
+        feedback.style.display = 'block';
+        feedback.style.color = '#176d1a';
+        feedback.textContent = '✓ Legenda aggiornata';
+        legendaFeedbackTimeout = setTimeout(() => {
+          if (!legendaDirty) feedback.style.display = 'none';
+        }, 1800);
+      }
+    }
+
+    function abbreviaGiorno(nomeGiorno) {
+      const base = (nomeGiorno || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      if (base.startsWith('domen')) return 'Dom';
+      if (base.startsWith('lun')) return 'Lun';
+      if (base.startsWith('mar')) return 'Mar';
+      if (base.startsWith('merc')) return 'Mer';
+      if (base.startsWith('gio')) return 'Gio';
+      if (base.startsWith('ven')) return 'Ven';
+      if (base.startsWith('sab')) return 'Sab';
+      return (nomeGiorno || '').slice(0, 3);
+    }
+
+    function aggiornaEtichetteSettimanaResponsive() {
+      const abbreviate = isPortraitMobile();
+      document.querySelectorAll('#output td.giorno-sett').forEach(cell => {
+        const fullDay = cell.dataset.fullDay || cell.textContent.trim();
+        if (!cell.dataset.fullDay) cell.dataset.fullDay = fullDay;
+        cell.textContent = abbreviate ? abbreviaGiorno(fullDay) : fullDay;
+      });
+    }
+
+    function gestisciViewportChange() {
+      gestisciStabilizzazioneOrientamento();
+      aggiornaControlliLegendaMobile();
+      aggiornaEtichetteSettimanaResponsive();
+    }
+
+    function gestisciCambioViewportDebounced() {
+      const orientazioneCorrente = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+      if (orientazioneCorrente === ultimaOrientazione && !isMobileDevice()) return;
+      ultimaOrientazione = orientazioneCorrente;
+      clearTimeout(viewportChangeTimeout);
+      viewportChangeTimeout = setTimeout(() => {
+        requestAnimationFrame(() => {
+          aggiornaEtichetteSettimanaResponsive();
+          aggiornaControlliLegendaMobile();
+          gestisciStabilizzazioneOrientamento();
+        });
+      }, isMobileDevice() ? 90 : 220);
+    }
+
+    function sospendiTransizioniSelect(ms) {
+      document.documentElement.style.setProperty('--select-transition', 'none');
+      clearTimeout(selectTransitionResumeTimeout);
+      selectTransitionResumeTimeout = setTimeout(() => {
+        document.documentElement.style.setProperty('--select-transition', 'background-color 0.3s, color 0.3s');
+      }, ms);
+    }
+
+    function gestisciStabilizzazioneOrientamento() {
+      if (isMobileDevice()) {
+        sospendiTransizioniSelect(180);
+        clearTimeout(orientationStabilizeTimeout);
+        orientationStabilizeTimeout = setTimeout(() => {
+          aggiornaControlliLegendaMobile();
+        }, 120);
+        return;
+      }
+
+      if (!isLandscapeCompatta()) {
+        aggiornaControlliLegendaMobile();
+        return;
+      }
+      // Durante rotazione e assestamento viewport riduce lavoro grafico percepito
+      sospendiTransizioniSelect(500);
+      clearTimeout(orientationStabilizeTimeout);
+      orientationStabilizeTimeout = setTimeout(() => {
+        aggiornaLegendaDebounced();
+      }, 400);
+    }
+
+    function aggiornaLegendaDebounced(force) {
+      if (isMobileDevice() && !force) {
+        segnalaLegendaDaAggiornare();
+        return;
+      }
+      clearTimeout(legendaUpdateTimeout);
+      const delay = isLandscapeCompatta() ? 360 : (isPortraitMobile() ? 260 : 120);
+      legendaUpdateTimeout = setTimeout(() => {
+        if (legendaUpdateInFrame) return;
+        legendaUpdateInFrame = true;
+        requestAnimationFrame(() => {
+          aggiornaLegenda();
+          legendaUpdateInFrame = false;
+        });
+      }, delay);
+    }
+
+    function salvaStatoInLocalStorageDebounced() {
+      clearTimeout(localStorageSaveTimeout);
+      const delay = isLandscapeCompatta() ? 850 : (isPortraitMobile() ? 650 : 250);
+      localStorageSaveTimeout = setTimeout(() => {
+        salvaStatoInLocalStorage();
+      }, delay);
+    }
+    // Caricamento automatico ultimo mese/anno lavorato
+    window.addEventListener('DOMContentLoaded', () => {
+      let ultimoMese = localStorage.getItem('ultimoMese');
+      let ultimoAnno = localStorage.getItem('ultimoAnno');
+      const oggi = new Date();
+      if (!ultimoMese) ultimoMese = (oggi.getMonth() + 1);
+      if (!ultimoAnno) ultimoAnno = oggi.getFullYear();
+      document.getElementById('mese').value = ultimoMese;
+      document.getElementById('anno').value = ultimoAnno;
+      aggiornaControlliLegendaMobile();
+      window.addEventListener('orientationchange', gestisciCambioViewportDebounced, { passive: true });
+      window.addEventListener('resize', gestisciCambioViewportDebounced, { passive: true });
+      caricaTurni();
+    });
+
+    function mostraLoader(show) {
+      const loader = document.getElementById('loader-overlay');
+      if (loader) loader.style.display = show ? 'flex' : 'none';
+    }
+
+    // --- URL API Google Apps Script ---
+    // APPSCRIPT_URL già dichiarato globalmente
+
+    // --- Logica di Caricamento Ottimizzata tramite fetch ---
+    function caricaTurni() {
+      const mese = document.getElementById('mese').value;
+      const anno = document.getElementById('anno').value;
+
+      if (meseCorrente && annoCorrente && String(meseCorrente) === String(mese) && String(annoCorrente) === String(anno)) {
+        // Se già caricati, non fare nulla (evita re-render e reflow inutili)
+        return;
+      }
+
+      localStorage.setItem('ultimoMese', mese);
+      localStorage.setItem('ultimoAnno', anno);
+      meseCorrente = mese;
+      annoCorrente = anno;
+
+      const cacheKey = `turni_${anno}-${mese}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        try {
+          const { turni } = JSON.parse(cachedData);
+          if (turni && turni.length > 0) {
+            console.log("Struttura tabella dalla cache, stato turni dal server...");
+            currentTurniData = turni;
+            mostraLoader(true);
+            // Recupera stato turni dal backend
+            fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${mese}&anno=${anno}`)
+              .then(r => r.json())
+              .then(json => {
+                const statoSalvato = (json && json.ok) ? json.stato : {};
+                mostraTabella(turni, mese, anno, statoSalvato);
+                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
+                mostraLoader(false);
+              })
+              .catch(() => {
+                mostraTabella(turni, mese, anno, {});
+                mostraLoader(false);
+              });
+            return;
+          }
+        } catch (e) {
+          console.error("Cache corrotta, la rimuovo.", e);
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
+      // Se non ci sono dati validi in cache, carica dal server.
+      console.log("Cache vuota o non valida. Caricamento dal server...");
+      mostraLoader(true);
+      // Recupera stato turni
+      fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${mese}&anno=${anno}`)
+        .then(r => r.json())
+        .then(json => {
+          const statoSalvato = (json && json.ok) ? json.stato : {};
+          // Recupera turni
+          fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${mese}&anno=${anno}`)
+            .then(r => r.json())
+            .then(json2 => {
+              const turni = (json2 && json2.ok && Array.isArray(json2.data)) ? json2.data : [];
+              if (turni.length > 0) {
+                currentTurniData = turni;
+                mostraTabella(turni, mese, anno, statoSalvato);
+                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
+              } else {
+                document.getElementById('output').innerHTML = '<span class="text-danger">Nessun turno trovato per questo mese/anno.</span>';
+              }
+              mostraLoader(false);
+            })
+            .catch(() => {
+              mostraLoader(false);
+              document.getElementById('output').innerHTML = '<span class="text-danger">Errore nel caricamento dei turni!</span>';
+            });
+        })
+        .catch(() => {
+          mostraLoader(false);
+          document.getElementById('output').innerHTML = '<span class="text-danger">Errore nel recupero stato turni!</span>';
+        });
+    }
+
+    function pulisciTabella() {
+      if (!meseCorrente || !annoCorrente) return;
+      
+      const popup = document.getElementById('custom-confirm-popup');
+      const btnOk = document.getElementById('custom-confirm-ok');
+      const btnCancel = document.getElementById('custom-confirm-cancel');
+      
+      popup.style.display = 'flex';
+
+      btnOk.onclick = () => {
+        popup.style.display = 'none';
+        const cacheKey = `turni_${annoCorrente}-${meseCorrente}`;
+        localStorage.removeItem(cacheKey); // Rimuove la cache per forzare il ricaricamento pulito
+
+        currentSelections = {}; // Clear the state object
+        // Svuota tutte le select
+        document.querySelectorAll('#output select').forEach(select => { select.value = ''; updateSelectColor(select); });
+        // Salva stato vuoto su backend
+        google.script.run.salvaStatoTurni(Number(annoCorrente), Number(meseCorrente), {});
+        aggiornaLegendaDebounced(); // Azzera la legenda visivamente
+        // Aggiorna tabella
+        caricaTurni();
+      };
+
+      btnCancel.onclick = () => {
+        popup.style.display = 'none';
+      };
+    }
+
+    function salvaTurniManuale() {
+      const mese = Number(meseCorrente || document.getElementById('mese').value);
+      const anno = Number(annoCorrente || document.getElementById('anno').value);
+      if (!mese || !anno) {
+        alert('Carica prima mese e anno.');
+        return;
+      }
+
+      clearTimeout(saveTimeout); // Evita doppio invio ravvicinato con l'auto-save
+      const statoDaSalvare = (currentSelections && typeof currentSelections === 'object') ? currentSelections : {};
+      const feedback = document.getElementById('salva-turni-feedback');
+
+      feedback.style.display = 'inline';
+      feedback.style.color = '#888';
+      feedback.textContent = isMobileDevice() ? 'Salvataggio manuale...' : 'salvataggio...';
+
+      google.script.run.withSuccessHandler(function() {
+        salvaStatoInLocalStorage();
+        feedback.style.color = '#176d1a';
+        feedback.textContent = isMobileDevice() ? '\u2713 Turni salvati' : '\u2713 salvato';
+        setTimeout(() => { feedback.style.display = 'none'; }, 2500);
+      }).withFailureHandler(function(err) {
+        feedback.style.color = '#b80000';
+        feedback.textContent = '\u2717 errore: ' + (err && err.message ? err.message : err);
+      }).salvaStatoTurni(anno, mese, statoDaSalvare);
+    }
+
+    function getPasqua(anno) {
+      try {
+        const a = anno % 19, b = anno % 4, c = anno % 7, k = Math.floor(anno / 100), p = Math.floor((13 + 8 * k) / 25), q = Math.floor(k / 4);
+        const M = (15 - p + k - q) % 30, N = (4 + k - q) % 7, d = (19 * a + M) % 30, e = (2 * b + 4 * c + 6 * d + N) % 7;
+        const giorno = 22 + d + e;
+        const data = giorno > 31 ? new Date(anno, 3, giorno - 31) : new Date(anno, 2, giorno);
+        if (isNaN(data.getTime())) return null;
+        return data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function isHoliday(date, pasqua) {
+      const g = date.getDate(), m = date.getMonth();
+      const festeFisse = [
+        {g:1,m:0},   // 1 gennaio
+        {g:6,m:0},   // 6 gennaio
+        {g:25,m:3},  // 25 aprile (corretto: aprile è 3)
+        {g:1,m:4},   // 1 maggio
+        {g:2,m:5},   // 2 giugno
+        {g:15,m:7},  // 15 agosto
+        {g:15,m:6},  // 15 luglio
+        {g:1,m:10},  // 1 novembre
+        {g:8,m:11},  // 8 dicembre
+        {g:25,m:11}, // 25 dicembre
+        {g:26,m:11}  // 26 dicembre
+      ];
+      if (festeFisse.some(f => f.g === g && f.m === m)) return true;
+      if (!pasqua || !(pasqua instanceof Date) || isNaN(pasqua.getTime())) return false;
+      const pasquetta = new Date(pasqua);
+      pasquetta.setDate(pasqua.getDate() + 1);
+      return (g === pasqua.getDate() && m === pasqua.getMonth()) || (g === pasquetta.getDate() && m === pasquetta.getMonth());
+    }
+
+    // statoSalvato: oggetto {selectId: valore, ...} oppure null
+    function mostraTabella(turni, mese, anno, statoSalvato) {
+      try {
+        console.log('DEBUG: mese=' + mese + ', anno=' + anno);
+        if (!turni || !turni.length) {
+          document.getElementById('output').innerHTML = '<b>Nessun turno trovato</b>';
+          return;
+        }
+        meseCorrente = mese;
+        annoCorrente = anno;
+        const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+        const titoloMese = `<h3 class='color-blue mb-05em'>${NOMI_MESI[mese-1]} ${anno}</h3>`;
+        const pasqua = getPasqua(anno);
+        console.log('DEBUG: Pasqua =', pasqua);
+
+        // --- Performance Optimization: Event Delegation & State Initialization ---
+        currentSelections = {}; // Reset state for the new table
+        const outputDiv = document.getElementById('output');
+        outputDiv.removeEventListener('change', handleSelectChange); // Remove old listener if any
+        outputDiv.addEventListener('change', handleSelectChange); // Add a single, efficient listener
+
+        let html = `${titoloMese}<table><tr><th>Giorno</th><th>Settimana</th>${NOMI.map(n => `<th>${n}</th>`).join('')}</tr>`;
+
+        turni.forEach(t => {
+          const data = new Date(anno, mese - 1, t.giorno);
+          if (isNaN(data.getTime())) {
+            console.error('DEBUG: Data non valida per giorno', t.giorno, 'mese', mese, 'anno', anno);
+          }
+          const giornoSett = GIORNI_SETT[data.getDay()];
+          const isDomenica = data.getDay() === 0;
+          const isFestivo = isHoliday(data, pasqua);
+          const isSabato = data.getDay() === 6;
+          const classeRiga = (isDomenica || isFestivo) ? ' class="festivo"' : '';
+          html += `<tr${classeRiga}><td>${t.giorno}</td><td class="giorno-sett" data-full-day="${giornoSett}">${giornoSett}</td>`;
+
+          NOMI.forEach(nome => {
+            const festivoId = `festivo_${t.giorno}_${nome}`;
+            const mattinaId = `mattina_${t.giorno}_${nome}`;
+            const pomeriggioId = `pomeriggio_${t.giorno}_${nome}`;
+            const notteId = `notte_${t.giorno}_${nome}`;
+
+            if (isDomenica || isFestivo) {
+              html += `<td class="operator-cell"><div><small>&nbsp;</small>${selectSigla(festivoId, '', ['REP'])}</div></td>`;
+              currentSelections[festivoId] = ''; // Initialize state
+            } else {
+              const opzioniMattina = ['1', 'VA'];
+              const opzioniPomeriggio = ['2', 'PRO', 'VA'];
+              if (isSabato) opzioniPomeriggio.push('REP');
+              const opzioniNotte = ['REP'];
+              html += `<td class="operator-cell">
+                <div><small>M</small>${selectSigla(mattinaId, '', opzioniMattina)}</div>
+                <div><small>P</small>${selectSigla(pomeriggioId, '', opzioniPomeriggio)}</div>
+                <div><small>N</small>${selectSigla(notteId, '', opzioniNotte)}</div>
+              </td>`;
+              // Initialize state for non-holiday selects
+              currentSelections[mattinaId] = '';
+              currentSelections[pomeriggioId] = '';
+              currentSelections[notteId] = '';
+            }
+          });
+          html += '</tr>';
+        });
+        html += '</table>';
+        document.getElementById('output').innerHTML = html;
+
+        // Priority: Backend State (condiviso tra dispositivi) > LocalStorage > Default
+        const stateToApply = (statoSalvato && Object.keys(statoSalvato).length > 0) ? statoSalvato : {};
+
+        // Ripristina stato da backend se presente, altrimenti da cache JS o localStorage
+        if (stateToApply && typeof stateToApply === 'object' && Object.keys(stateToApply).length > 0) {
+          Object.keys(stateToApply).forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+              const value = stateToApply[selectId];
+              select.value = value;
+              updateSelectColor(select);
+              currentSelections[selectId] = value; // IMPORTANT: Sync currentSelections with the restored state
+            }
+          });
+        } else {
+          // If no state to apply, just ensure colors are correct for empty selects
+          document.querySelectorAll('#output select').forEach(updateSelectColor);
+        }
+
+        const saveFeedback = document.getElementById('salva-turni-feedback');
+        if (saveFeedback) {
+          saveFeedback.style.display = 'none';
+          saveFeedback.textContent = '';
+        }
+
+        aggiornaLegenda();
+        aggiornaEtichetteSettimanaResponsive();
+        aggiornaControlliLegendaMobile();
+        // La tabella di backup progetto è stata rimossa come da richiesta per evitare confusione.
+        // Se necessario, la sua logica può essere ripristinata o spostata in un'altra sezione.
+        const backupContainer = document.getElementById('progetto-backup-container');
+        if(backupContainer) {
+            backupContainer.innerHTML = '';
+        }
+      } catch (err) {
+        document.getElementById('output').innerHTML = '<span class="text-danger">Errore di rendering tabella: ' + (err && err.message ? err.message : err) + '</span>';
+      }
+    }
+
+    function selectSigla(id, prefill, opzioni) {
+      // Determina il mese corrente per abilitare RR
+      let meseAttivo = meseCorrente ? Number(meseCorrente) : null;
+      const opzioniRR = [...opzioni];
+      if (MESI_RR.includes(meseAttivo)) {
+        opzioniRR.push('RR');
+      }
+      const opzioniComplete = [...new Set(['', 'F', 'RC', ...opzioniRR.filter(Boolean)])];
+      let s = `<select id="${id}" title="Seleziona opzione">`; // Rimosso onchange per usare solo event delegation
+      opzioniComplete.forEach(sigla => {
+        // RR disabilitato se non è un mese abilitato
+        let disabled = '';
+        if (sigla === 'RR' && !MESI_RR.includes(meseAttivo)) disabled = 'disabled';
+        const selected = (prefill && sigla === prefill) ? 'selected' : '';
+        const label = sigla === 'F' ? 'F' : (sigla === 'RC' ? 'RC' : sigla);
+        s += `<option value="${sigla}" ${selected} ${disabled}>${label}</option>`;
+      });
+      return s + '</select>';
+    }
+
+    // --- Performance Optimization: Event Delegation Handler ---
+    function handleSelectChange(event) {
+      // This single function handles changes for ALL select elements inside #output
+      if (event.target.tagName === 'SELECT') {
+        gestisciEventiSelect(event.target);
+      }
+    }
+
+    function gestisciEventiSelect(select) {
+        currentSelections[select.id] = select.value; // Update state object
+        updateSelectColor(select);
+        gestisciFerie(select);
+        gestisciRC(select);
+        gestisciDoppioVA(select);
+        gestisciRepEsclusiva(select);
+        gestisciUnicitaVA_PRO(select);
+        // La legenda si aggiorna sempre, la fluidità è gestita dalle altre ottimizzazioni
+
+        // --- Su mobile il salvataggio è solo manuale tramite pulsante ---
+        clearTimeout(saveTimeout); // Cancella il timeout precedente se esiste
+        if (isMobileDevice()) {
+            segnalaModificheDaSalvare();
+        } else {
+            saveTimeout = setTimeout(() => {
+                console.log("Salvataggio automatico su server...");
+                if (meseCorrente && annoCorrente && Object.keys(currentSelections).length > 0) {
+                    google.script.run.salvaStatoTurni(Number(annoCorrente), Number(meseCorrente), currentSelections);
+                }
+            }, isLandscapeCompatta() ? 3200 : (isPortraitMobile() ? 2600 : 2000));
+            salvaStatoInLocalStorageDebounced();
+        }
+
+        aggiornaLegendaDebounced();
+
+    // Se selezioni "VA" o "PRO" in una fascia (mattina/pomeriggio), rimuovilo dagli altri operatori per lo stesso giorno e fascia
+    function gestisciUnicitaVA_PRO(select) {
+      const idParts = select.id.split('_');
+      const fascia = idParts[0];
+      const giorno = idParts[1];
+      const nomeAttuale = idParts[2];
+      if ((fascia === 'mattina' || fascia === 'pomeriggio') && (select.value === 'VA' || select.value === 'PRO')) {
+        NOMI.forEach(nome => {
+          if (nome === nomeAttuale) return;
+          const altroSelect = document.getElementById(`${fascia}_${giorno}_${nome}`);
+          if (altroSelect && (altroSelect.value === select.value)) {
+            altroSelect.value = '';
+            updateSelectColor(altroSelect);
+            currentSelections[altroSelect.id] = ''; // Sync state object
+          }
+        });
+      }
+    }
+    }
+
+    function updateSelectColor(select) {
+      if (select.dataset.lastStyledValue === select.value) return;
+      const colors = {
+        'VA':{t:'#0a2377',b:'#b3d1ff'},      // blu chiaro
+        'PRO':{t:'#006b2e',b:'#b6ffd0'},    // verde chiaro
+        'REP':{t:'#b80000',b:'#ffd6d6'},    // rosso chiaro
+        'F':{t:'#444',b:'#e2e3e5'},         // grigio chiaro
+        'RC':{t:'#444',b:'#e2e3e5'},        // grigio chiaro
+        '1':{t:'#a65c00',b:'#ffe5b4'},      // arancione chiaro
+        '2':{t:'#4b2e83',b:'#e5d0f5'},      // viola chiaro
+        'E':{t:'#7a6f00',b:'#fff9c4'},      // giallo chiaro
+        'RR':{t:'#fff',b:'#e040fb'}         // magenta chiaro, testo bianco
+      };
+      const c = colors[select.value] || {t:'black',b:'white'};
+      select.style.color = c.t;
+      select.style.backgroundColor = c.b;
+      select.dataset.lastStyledValue = select.value;
+    }
+
+    // --- Performance Optimization: Legend calculation from state object ---
+    function aggiornaLegenda() {
+      const counts = {};
+      const pasqua = getPasqua(annoCorrente);
+      NOMI.forEach(nome => { counts[nome] = {'VA':0,'RR':0,'REP':0,'PRO':0,'1':0,'2':0,'RC':0,'VAx2':0,'REP ORE':0,'F':0}; });
+
+      // Iterate over the raw turni data, not the DOM
+      currentTurniData.forEach(t => {
+        const giorno = t.giorno;
+        const data = new Date(annoCorrente, meseCorrente - 1, giorno);
+        const dayOfWeek = data.getDay();
+        const isFestivoCompleto = dayOfWeek === 0 || isHoliday(data, pasqua);
+
+        NOMI.forEach(nome => {
+          let turniGiorno = [];
+          // Get values from the state object, not the DOM
+          if (isFestivoCompleto) {
+            turniGiorno.push(currentSelections[`festivo_${giorno}_${nome}`]);
+          } else {
+            turniGiorno.push(currentSelections[`mattina_${giorno}_${nome}`]);
+            turniGiorno.push(currentSelections[`pomeriggio_${giorno}_${nome}`]);
+            turniGiorno.push(currentSelections[`notte_${giorno}_${nome}`]);
+          }
+          turniGiorno = turniGiorno.filter(t => t); // Remove empty/null values
+
+          if (turniGiorno[0] === 'VA' && turniGiorno[1] === 'VA') counts[nome]['VAx2']++;
+          const repCount = turniGiorno.filter(t => t === 'REP').length;
+          if (repCount > 0) {
+            if (isFestivoCompleto) { counts[nome]['REP'] += 2; counts[nome]['REP ORE'] += 24; }
+            else if (dayOfWeek === 6) { counts[nome]['REP'] += 1.5; counts[nome]['REP ORE'] += 18; }
+            else { counts[nome]['REP'] += repCount; counts[nome]['REP ORE'] += repCount * 12; }
+          }
+
+          // Conteggia F e RC una sola volta per giorno, anche se presenti in più fasce
+          if (turniGiorno.includes('F')) counts[nome]['F'] += 1;
+          if (turniGiorno.includes('RC')) counts[nome]['RC'] += 1;
+
+          // Conteggia gli altri turni normalmente (esclusi F, RC, REP)
+          const altriTurni = turniGiorno.filter(t => t !== 'REP' && t !== 'F' && t !== 'RC');
+          altriTurni.forEach(turno => {
+            if (counts[nome].hasOwnProperty(turno) && turno) {
+              counts[nome][turno] += 1;
+            }
+          });
+        });
+      });
+
+      let legendaHtml = '';
+      const colors = {
+        'VA':'#0a2377',
+        'PRO':'#006b2e',
+        'REP':'#b80000',
+        'REP ORE':'#b80000',
+        'F':'#444',
+        'RC':'#444',
+        '1':'#a65c00',
+        '2':'#4b2e83',
+        'E':'#7a6f00',
+        'RR':'#e040fb',
+        'VAx2':'#0a2377'
+      };
+      NOMI.forEach(nome => {
+          legendaHtml += `<div class="legend-operator">`;
+            <h5>${nome}</h5>
+            <div class="legend-counts">
+              <span class="legend-count-blue">1: <b>${counts[nome]['1']}</b></span>
+              <span class="legend-count-purple">2: <b>${counts[nome]['2']}</b></span>
+              <span class="legend-count-va">VA: <b>${counts[nome]['VA']}</b></span>
+              <span class="legend-count-vax2">VAx2: <b>${counts[nome]['VAx2']}</b></span>
+              <span class="legend-count-rc">RC: <b>${counts[nome]['RC']}</b></span>
+              <span class="legend-count-rep">REP: <b>${counts[nome]['REP']}</b></span>
+              <span class="legend-count-repore">REP Ore: <b>${counts[nome]['REP ORE']}</b></span>
+              <span class="legend-count-pro">PRO: <b>${counts[nome]['PRO']}</b></span>
+              <span class="legend-count-f">F: <b>${counts[nome]['F']}</b></span>
+              <span class="legend-count-rr">RR: <b>${counts[nome]['RR']}</b></span>
+            </div>
+          </div>`;
+      });
+      document.getElementById('legenda-operatori').innerHTML = legendaHtml;
+      legendaDirty = false;
+      aggiornaControlliLegendaMobile();
+    }
+
+    function gestisciAutomazione(select, tipo) {
+        const valore = (select.value || '').trim();
+        const idParts = select.id.split('_');
+        if (idParts[0] === 'festivo') return;
+        const giorno = idParts[1], nome = idParts[2];
+        const fasce = ['mattina', 'pomeriggio', 'notte'];
+        const gruppo = fasce
+          .map(fascia => document.getElementById(`${fascia}_${giorno}_${nome}`))
+          .filter(Boolean);
+
+        // Se imposti F/RC su una fascia, replica su tutte e 3
+        if (valore === tipo) {
+          gruppo.forEach(altroSelect => {
+            if ((altroSelect.value || '').trim() !== tipo) {
+              altroSelect.value = tipo;
+              updateSelectColor(altroSelect);
+              currentSelections[altroSelect.id] = tipo;
+            }
+          });
+          return;
+        }
+
+        // Se svuoti una fascia che era parte del blocco F/RC, svuota tutte e 3
+        if (valore === '') {
+          const contieneTipo = gruppo.some(s => (s.value || '').trim() === tipo);
+          if (contieneTipo) {
+            gruppo.forEach(altroSelect => {
+              if ((altroSelect.value || '').trim() === tipo) {
+                altroSelect.value = '';
+                updateSelectColor(altroSelect);
+                currentSelections[altroSelect.id] = ''; // Sync state object
+              }
+            });
+          }
+        }
+    }
+    function gestisciFerie(select) { gestisciAutomazione(select, 'F'); }
+    function gestisciRC(select) { gestisciAutomazione(select, 'RC'); }
+
+    function gestisciRepEsclusiva(select) {
+      if (select.value.trim() !== 'REP') return;
+      const [fascia, giorno, nomeAttuale] = select.id.split('_');
+      NOMI.forEach(nome => {
+        if (nome === nomeAttuale) return;
+        const altroSelect = document.getElementById(`${fascia}_${giorno}_${nome}`);
+        if (altroSelect && altroSelect.value.trim() === 'REP') {
+          altroSelect.value = '';
+          updateSelectColor(altroSelect);
+          currentSelections[altroSelect.id] = ''; // Sync state object
+        }
+      });
+    }
+
+    function gestisciDoppioVA(select) {
+      const [fascia, giorno, nome] = select.id.split('_');
+      if (fascia !== 'mattina' && fascia !== 'pomeriggio') return;
+      const mattina = document.getElementById(`mattina_${giorno}_${nome}`);
+      const pomeriggio = document.getElementById(`pomeriggio_${giorno}_${nome}`);
+      if (mattina && pomeriggio && mattina.value === 'VA' && pomeriggio.value === 'VA') {
+        for (let i = parseInt(giorno, 10); i <= new Date(annoCorrente, meseCorrente, 0).getDate(); i++) {
+          const dataControllo = new Date(annoCorrente, meseCorrente - 1, i);
+          if (dataControllo.getDay() === 6) {
+            ['mattina', 'pomeriggio', 'notte'].forEach(fasciaSabato => {
+              const selectSabato = document.getElementById(`${fasciaSabato}_${i}_${nome}`);
+              if (selectSabato) {
+                selectSabato.value = 'RC';
+                updateSelectColor(selectSabato);
+                currentSelections[selectSabato.id] = 'RC'; // Sync state object
+              }
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    function generaAnteprimaBackup() {
+      const mese = Number(document.getElementById('mese').value);
+      const anno = Number(document.getElementById('anno').value);
+      const table = document.querySelector('#output table');
+      if (!table) return alert('Nessuna tabella trovata!');
+
+      const GIORNI_SETT_INIZIALI = ["D", "L", "M", "M", "G", "V", "S"];
+      const pasqua = getPasqua(anno);
+      const header = ['TSRM'];
+      for (let i = 1; i <= new Date(anno, mese, 0).getDate(); i++) {
+        const data = new Date(anno, mese - 1, i);
+        header.push({ giorno: i, iniziale: GIORNI_SETT_INIZIALI[data.getDay()], isFestivo: data.getDay() === 0 || isHoliday(data, pasqua, anno) });
+      }
+
+      const tabellaSemplificata = [header.map(h => typeof h === 'object' ? `${h.giorno} ${h.iniziale}` : h)];
+      NOMI.forEach((nome, indiceNome) => {
+        // Mostra sempre "VENTI" per ogni nome che inizia con VENT
+        const nomeVisualizzato = nome.startsWith('VENT') ? 'VENTI' : nome.substring(0, 4);
+        const rigaOperatore = [nomeVisualizzato];
+        // Iterate from day 1 to end of month
+        for (let giorno = 1; giorno <= new Date(anno, mese, 0).getDate(); giorno++) {
+            const data = new Date(anno, mese - 1, giorno);
+            const isFestivoRow = data.getDay() === 0 || isHoliday(data, pasqua);
+            let turniCella = [];
+            // Get values from the state object
+            if (isFestivoRow) {
+              const turno = currentSelections[`festivo_${giorno}_${nome}`];
+              if (turno) turniCella.push(turno);
+            } else {
+              const turnoM = currentSelections[`mattina_${giorno}_${nome}`];
+              const turnoP = currentSelections[`pomeriggio_${giorno}_${nome}`];
+              const turnoN = currentSelections[`notte_${giorno}_${nome}`];
+
+              if (turnoM === 'VA') turniCella.push('<span class="nowrap">VA<small class="color-blue">(M)</small></span>');
+              else if (turnoM) turniCella.push(turnoM);
+
+              if (turnoP === 'VA') turniCella.push('<span class="nowrap">VA<small class="color-orange">(P)</small></span>');
+              else if (turnoP) turniCella.push(turnoP);
+
+              if (turnoN) turniCella.push(turnoN);
+            }
+
+            // Logica per unire i turni, mostrando F e RC una sola volta
+            const unici = [];
+            turniCella.forEach(t => {
+              const cleanTurno = t.replace(/<[^>]*>/g, '').substring(0, 2); // Prende solo la sigla (es. 'VA' da '<span>VA...')
+              if ((cleanTurno === 'F' || cleanTurno === 'RC') && unici.some(u => u.startsWith(cleanTurno))) {
+                // non fare nulla, già presente
+              } else {
+                unici.push(t);
+              }
+            });
+            const testoCella = unici.join('<br>');
+            rigaOperatore.push(testoCella);
+        }
+        tabellaSemplificata.push(rigaOperatore);
+      });
+
+      datiBackupDaSalvare = { mese, anno, tabella: tabellaSemplificata.map(riga => riga.map(cella => cella.replace(/<br>/g, ' / '))) };
+
+      let previewHtml = '<h4>Anteprima Salvataggio</h4><div class="preview-table-wrapper"><table><tr>';
+      header.forEach((h, idx) => {
+        const classe = (typeof h === 'object' && h.isFestivo) ? ' class="header-festivo"' : '';
+        let style = '';
+        if (idx === 0) {
+          // Colonna nomi operatori più lunga (più spazio orizzontale, testo normale)
+          style = ' class="minw-100 maxw-140"';
+        } else {
+          // Celle dei giorni più strette
+          style = ' class="minw-38 maxw-50 font-097 p-2"';
+        }
+        const testo = typeof h === 'object' ? `${h.giorno}&nbsp;${h.iniziale}` : h;
+        previewHtml += `<th${classe}${style}>${testo}</th>`;
+      });
+      previewHtml += '</tr>';
+      tabellaSemplificata.slice(1).forEach(riga => {
+        previewHtml += `<tr>${riga.map((cella, i) => {
+          if (i === 0) {
+            // Nomi abbreviati in grassetto e centrati
+            return `<td class="fw-bold bg-lightblue text-center vertical-middle minw-100 maxw-140 font-085">${cella || ''}</td>`;
+          } else {
+            // Celle dei turni: ritorna alla dimensione precedente (0.95em)
+            return `<td class="minw-38 maxw-50 font-097 text-center">${cella || ''}</td>`;
+          }
+        }).join('')}</tr>`;
+      });
+      previewHtml += '</table></div>';
+      document.getElementById('preview-container').innerHTML = previewHtml;
+      document.getElementById('conferma-salvataggio-btn').style.display = 'inline-block';
+      document.getElementById('chiudi-anteprima-btn').style.display = 'inline-block';
+    }
+
+    function confermaSalvataggioBackup() {
+      if (!datiBackupDaSalvare) return alert("Nessun dato di anteprima da salvare.");
+      const { mese, anno, tabella } = datiBackupDaSalvare;
+      const feedback = document.getElementById('feedback-message');
+      feedback.style.display = 'block';
+      feedback.style.backgroundColor = '#e0f7fa';
+      feedback.style.color = '#007bff';
+      feedback.textContent = 'Salvataggio in corso...';
+
+      fetch(`${APPSCRIPT_URL}?action=salvaTabellaSemplificata&mese=${mese}&anno=${anno}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tabella }) })
+        .then(r => r.json())
+        .then(() => {
+          feedback.style.backgroundColor = '#d4edda';
+          feedback.style.color = '#28a745';
+          feedback.textContent = 'Salvataggio completato!';
+          setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+          document.getElementById('conferma-salvataggio-btn').style.display = 'none';
+          document.getElementById('chiudi-anteprima-btn').style.display = 'none';
+          if (document.getElementById('archivio-container').style.display === 'block') caricaListaArchivio();
+        })
+        .catch(err => {
+          feedback.style.backgroundColor = '#f8d7da';
+          feedback.style.color = '#dc3545';
+          feedback.textContent = 'Errore: ' + (err && err.message ? err.message : err);
+          setTimeout(() => { feedback.style.display = 'none'; }, 5000);
+        });
+    }
+
+    function chiudiAnteprima() {
+      document.getElementById('preview-container').innerHTML = '';
+      document.getElementById('progetto-backup-container').innerHTML = '';
+      document.getElementById('conferma-salvataggio-btn').style.display = 'none';
+      document.getElementById('chiudi-anteprima-btn').style.display = 'none';
+    }
+
+    function toggleArchivio() {
+      const container = document.getElementById('archivio-container');
+      if (container.style.display === 'none') {
+        // Svuota la cache localStorage dei turni ogni volta che si apre l’archivio per evitare conflitti
+        Object.keys(localStorage).forEach(k => { if (k.startsWith('turni_')) localStorage.removeItem(k); });
+        container.style.display = 'block';
+        caricaListaArchivio();
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+
+    function cercaArchivio() {
+      const mese = document.getElementById('archivio-filtro-mese').value;
+      const anno = document.getElementById('archivio-filtro-anno').value;
+      if (!mese || !anno) {
+        document.getElementById('archivio-preview').innerHTML = '<span class="text-danger">Seleziona mese e anno!</span>';
+        return;
+      }
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const nomeFoglio = NOMI_MESI[parseInt(mese,10)-1] + ' ' + anno;
+      caricaAnteprimaArchiviata(nomeFoglio, true);
+    }
+
+    function caricaAnteprimaArchiviata(nomeFoglio, mostraIntestazione) {
+      const previewDiv = document.getElementById('archivio-preview');
+        document.getElementById('reperibilita-container').innerHTML = '';
+      previewDiv.innerHTML = 'Caricamento...';
+      let timeoutId = setTimeout(() => {
+        if (previewDiv.innerHTML === 'Caricamento...') {
+          previewDiv.innerHTML = '<span class="text-danger">Errore: nessuna risposta dal server (timeout)!</span>';
+        }
+      }, 3000);
+      fetch(`${APPSCRIPT_URL}?action=getDatiFoglio&nomeFoglio=${encodeURIComponent(nomeFoglio)}`)
+        .then(r => r.json())
+        .then(json => {
+          clearTimeout(timeoutId);
+          const datiTabella = (json && json.ok) ? json.data : [];
+          window.datiTabellaCorrente = datiTabella;
+          let previewHtml = '';
+          if (datiTabella && datiTabella.length > 0) {
+            let mese = null, anno = null;
+            const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+            const match = nomeFoglio.match(/^([A-Za-zàèéìòù]+)\s+(\d{4})$/);
+            if (match) {
+              const nomeMese = match[1];
+              anno = parseInt(match[2], 10);
+              mese = NOMI_MESI.findIndex(m => m.toLowerCase() === nomeMese.toLowerCase()) + 1;
+            }
+            let pasqua = null;
+            if (anno) pasqua = getPasqua(anno);
+            if (mostraIntestazione && mese && anno) {
+              previewHtml += `<h4 class='archivio-titolo'>Archivio: ${NOMI_MESI[mese-1]} ${anno}</h4>`;
+            }
+            previewHtml += '<div class="preview-table-wrapper"><table>';
+            datiTabella.forEach((riga, index) => {
+              previewHtml += '<tr>';
+              riga.forEach((cella, cellIndex) => {
+                let tag = index === 0 ? 'th' : 'td';
+                let classe = '';
+                let contenutoCella = String(cella == null ? '' : cella).replace(/ \/ /g, '<br>');
+                if (index !== 0 && cellIndex !== 0 && contenutoCella) {
+                  // Colora ogni codice turno come nella tabella principale
+                  const colori = {
+                    'VA':'#0a2377',
+                    'PRO':'#006b2e',
+                    'REP':'#b80000',
+                    'F':'#444',
+                    'RC':'#444',
+                    '1':'#a65c00',
+                    '2':'#4b2e83',
+                    'E':'#7a6f00',
+                    'RR':'#e040fb'
+                  };
+                  const parti = contenutoCella.split('<br>');
+                  const giornoLabel = datiTabella[0][cellIndex];
+                  const giornoMatch = giornoLabel ? String(giornoLabel).match(/^(\d{1,2})/)
+                    : null;
+                  const giorno = giornoMatch ? parseInt(giornoMatch[1], 10) : null;
+                  contenutoCella = parti.map(t => {
+                    const clean = t.replace(/<[^>]*>/g, '');
+                    if (clean === 'PRO' && giorno) {
+                      return `<span class='pro-link' onclick="apriFormProgetto('${giorno}', '${riga[0]}', '${mese}', '${anno}')">PRO</span>`;
+                    } else if (colori[clean]) {
+                      // RR testo bianco
+                      if (clean === 'RR') {
+                        return `<span class='color-rr'>${t}</span>`;
+                      } else if (clean === 'PRO') {
+                        return `<span class='color-pro'>${t}</span>`;
+                      } else if (clean === 'REP') {
+                        return `<span class='color-bordeaux'>${t}</span>`;
+                      } else if (clean === 'VA') {
+                        return `<span class='color-va'>${t}</span>`;
+                      } else if (clean === 'F' || clean === 'RC') {
+                        return `<span class='color-rc'>${t}</span>`;
+                      } else if (clean === '1') {
+                        return `<span class='color-orange'>${t}</span>`;
+                      } else if (clean === '2') {
+                        return `<span class='color-purple'>${t}</span>`;
+                      } else {
+                        return `<span>${t}</span>`;
+                      }
+                    } else {
+                      return t;
+                    }
+                  }).join('<br>');
+                }
+                previewHtml += `<${tag}${style}${classe ? ' class="'+classe+'"' : ''}>${contenutoCella}</${tag}>`;
+              });
+              previewHtml += '</tr>';
+            });
+            previewHtml += '</table></div>';
+          } else {
+            previewHtml = '<span class="text-danger">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
+          }
+          previewDiv.innerHTML = previewHtml;
+        })
+        .catch(() => {
+          clearTimeout(timeoutId);
+          previewDiv.innerHTML = '<span class="text-danger">Errore di rete o risposta non valida dal server!</span>';
+        });
+        });
+                if (cellIndex > 0 && mese && anno) {
+                  const giornoMatch = String(cella || '').match(/^(\d{1,2})/);
+                  if (giornoMatch) {
+                    const giorno = parseInt(giornoMatch[1], 10);
+                    const data = new Date(anno, mese - 1, giorno);
+                    const isFestivo = data.getDay() === 0 || (pasqua && isHoliday(data, pasqua));
+                    if (isFestivo) classe = 'header-festivo';
+                  }
+                }
+              } else if (cellIndex === 0) {
+                tag = 'th';
+                classe = 'th-header-bg';
+                style = '';
+              }
+              let contenutoCella = String(cella == null ? '' : cella).replace(/ \/ /g, '<br>');
+              if (index !== 0 && cellIndex !== 0 && contenutoCella) {
+                // Colora ogni codice turno come nella tabella principale
+                const colori = {
+                  'VA':'#0a2377',
+                  'PRO':'#006b2e',
+                  'REP':'#b80000',
+                  'F':'#444',
+                  'RC':'#444',
+                  '1':'#a65c00',
+                  '2':'#4b2e83',
+                  'E':'#7a6f00',
+                  'RR':'#e040fb'
+                };
+                const parti = contenutoCella.split('<br>');
+                const giornoLabel = datiTabella[0][cellIndex];
+                const giornoMatch = giornoLabel ? String(giornoLabel).match(/^(\d{1,2})/)
+                  : null;
+                const giorno = giornoMatch ? parseInt(giornoMatch[1], 10) : null;
+                contenutoCella = parti.map(t => {
+                  const clean = t.replace(/<[^>]*>/g, '');
+                  if (clean === 'PRO' && giorno) {
+                    return `<span class='pro-link' onclick="apriFormProgetto('${giorno}', '${riga[0]}', '${mese}', '${anno}')">PRO</span>`;
+                  } else if (colori[clean]) {
+                    // RR testo bianco
+                    const style = clean === 'RR' ? `color:#fff;background:${colori['RR']};padding:1px 4px;border-radius:4px;` : `color:${colori[clean]}`;
+                    return `<span>${t}</span>`;
+                  } else {
+                    return t;
+                  }
+                }).join('<br>');
+              }
+              previewHtml += `<${tag}${style}${classe ? ' class="'+classe+'"' : ''}>${contenutoCella}</${tag}>`;
+            });
+            previewHtml += '</tr>';
+          });
+          // Form progetto (popup semplice)
+          previewHtml += `<div id='form-progetto-popup' class='popup-overlay'>
+            <div class='popup-inner'>
+              <h4 class='popup-title'>Dati Progetto</h4>
+              <form id='form-progetto-dettagli' class='popup-form'>
+                <input type='hidden' id='progetto-giorno'>
+                <input type='hidden' id='progetto-operatore'>
+                <input type='hidden' id='progetto-mese'>
+                <input type='hidden' id='progetto-anno'>
+                <div class='popup-row'>
+                  <label class='popup-label'>
+                    <span>Ora inizio globale</span>
+                    <input type='time' id='progetto-ora-inizio-globale' class='popup-input-time' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
+                  </label>
+                  <label class='popup-label'>
+                    <span>Ora fine globale</span>
+                    <input type='time' id='progetto-ora-fine-globale' class='popup-input-time' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
+                  </label>
+                  <div class='popup-totore-box'>
+                    <span>Tot ore</span>
+                    <label for='progetto-tot-ore-globale' class='visually-hidden'>Totale ore globale</label>
+                    <input type='text' id='progetto-tot-ore-globale' class='popup-input-tot' readonly title='Totale ore globale' placeholder='Totale ore'>
+                  </div>
+                </div>
+                <div id='progetto-procedure-list' class='contatti-procedure-list'></div>
+                <div class='popup-btn-row'>
+                  <button type='button' onclick='aggiungiProceduraProgetto()' class='popup-btn-add'>Aggiungi procedura</button>
+                </div>
+                <div class='popup-btn-row-end'>
+                  <button type='button' onclick='salvaDatiProgetto()' class='popup-btn-confirm'>Conferma/Chiudi</button>
+                  <button type='button' onclick='chiudiFormProgetto()' class='popup-btn-cancel'>Annulla</button>
+                </div>
+              </form>
+              <span id='progetto-feedback' class='popup-feedback'></span>
+            </div>
+          </div>`;
+              // Funzioni per popup progetto GLOBALI
+              window.apriFormProgetto = function(giorno, operatore, mese, anno) {
+                const popup = document.getElementById('form-progetto-popup');
+                popup.style.display = 'flex';
+                document.getElementById('progetto-giorno').value = giorno;
+                document.getElementById('progetto-operatore').value = operatore;
+                document.getElementById('progetto-mese').value = mese;
+                document.getElementById('progetto-anno').value = anno;
+                document.getElementById('progetto-feedback').style.display = 'none';
+                // Recupera dati già inseriti per quel giorno/operatore/mese/anno (array di procedure)
+                google.script.run.withSuccessHandler(function(dati) {
+                  if (dati && typeof dati === 'object' && (dati.oraInizioGlobale || dati.oraFineGlobale || (Array.isArray(dati.procedure) && dati.procedure.length))) {
+                    renderProceduraProgetto(dati);
+                    setTimeout(() => { popup.style.display = 'flex'; }, 0);
+                  } else {
+                    renderProceduraProgetto({ oraInizioGlobale: '', oraFineGlobale: '', procedure: [] });
+                    setTimeout(() => { popup.style.display = 'flex'; }, 0);
+                  }
+                }).getDatiProgetto({giorno, operatore, mese, anno});
+              }
+
+              window.aggiungiProceduraProgetto = function() {
+                const lista = document.getElementById('progetto-procedure-list');
+                const div = document.createElement('div');
+                div.className = 'progetto-procedura-item';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'row';
+                div.style.gap = '10px';
+                div.style.alignItems = 'flex-end';
+                div.innerHTML = `
+                  <label class='progetto-label'>
+                    <span class='progetto-span-label'>Tipo procedura</span>
+                    <input type='text' class='progetto-tipo-procedura progetto-input'>
+                  </label>
+                  <label class='progetto-label'>
+                    <span class='progetto-span-label'>Nome paziente</span>
+                    <input type='text' class='progetto-paziente progetto-input'>
+                  </label>
+                  <label class='progetto-label'>
+                    <span class='progetto-span-label'>Numero cartella</span>
+                    <input type='text' class='progetto-cartella progetto-input progetto-input-cartella'>
+                  </label>
+                  <button type='button' onclick='this.parentNode.remove()' class='progetto-remove-btn'>Rimuovi</button>
+                `;
+                lista.appendChild(div);
+              }
+
+              window.renderProceduraProgetto = function(dati) {
+                // dati: { oraInizioGlobale, oraFineGlobale, procedure: [] }
+                const lista = document.getElementById('progetto-procedure-list');
+                lista.innerHTML = '';
+                document.getElementById('progetto-ora-inizio-globale').value = dati && dati.oraInizioGlobale ? dati.oraInizioGlobale : '';
+                document.getElementById('progetto-ora-fine-globale').value = dati && dati.oraFineGlobale ? dati.oraFineGlobale : '';
+                // Calcolo automatico e sempre visibile
+                const aggiornaTotOre = () => {
+                  const inizio = document.getElementById('progetto-ora-inizio-globale').value;
+                  const fine = document.getElementById('progetto-ora-fine-globale').value;
+                  const totOreInput = document.getElementById('progetto-tot-ore-globale');
+                  if (inizio && fine && totOreInput) {
+                    const [h1, m1] = inizio.split(':').map(Number);
+                    const [h2, m2] = fine.split(':').map(Number);
+                    let diff = (h2 + m2/60) - (h1 + m1/60);
+                    if (diff < 0) diff += 24;
+                    totOreInput.value = Math.round(diff * 100) / 100;
+                  } else if (totOreInput) {
+                    totOreInput.value = '';
+                  }
+                  if (totOreInput) totOreInput.style.background = '#f4f8fb';
+                };
+                aggiornaTotOre();
+                document.getElementById('progetto-ora-inizio-globale').addEventListener('change', aggiornaTotOre);
+                document.getElementById('progetto-ora-inizio-globale').addEventListener('input', aggiornaTotOre);
+                document.getElementById('progetto-ora-fine-globale').addEventListener('change', aggiornaTotOre);
+                document.getElementById('progetto-ora-fine-globale').addEventListener('input', aggiornaTotOre);
+                const procedure = dati && Array.isArray(dati.procedure) ? dati.procedure : [];
+                if (!procedure.length) window.aggiungiProceduraProgetto();
+                else procedure.forEach(p => {
+                  const div = document.createElement('div');
+                  div.className = 'progetto-procedura-item';
+                  div.style.display = 'flex';
+                  div.style.flexDirection = 'row';
+                  div.style.gap = '10px';
+                  div.style.alignItems = 'flex-end';
+                  div.innerHTML = `
+                    <label class='progetto-label'>
+                      <span class='progetto-span-label'>Tipo procedura</span>
+                      <input type='text' class='progetto-tipo-procedura progetto-input' value='${p.tipoProcedura||''}'>
+                    </label>
+                    <label class='progetto-label'>
+                      <span class='progetto-span-label'>Nome paziente</span>
+                      <input type='text' class='progetto-paziente progetto-input' value='${p.paziente||''}'>
+                    </label>
+                    <label class='progetto-label'>
+                      <span class='progetto-span-label'>Numero cartella</span>
+                      <input type='text' class='progetto-cartella progetto-input progetto-input-cartella' value='${p.cartella||''}'>
+                    </label>
+                    <button type='button' onclick='this.parentNode.remove()' class='progetto-remove-btn'>Rimuovi</button>
+                  `;
+                  lista.appendChild(div);
+                });
+              }
+
+              window.calcolaTotOreProcedura = function(input) {
+                const div = input.closest('.progetto-procedura-item');
+                const inizio = div.querySelector('.progetto-ora-inizio').value;
+                const fine = div.querySelector('.progetto-ora-fine').value;
+                const totOreInput = div.querySelector('.progetto-tot-ore');
+                if (inizio && fine) {
+                  const [h1, m1] = inizio.split(':').map(Number);
+                  const [h2, m2] = fine.split(':').map(Number);
+                  let diff = (h2 + m2/60) - (h1 + m1/60);
+                  if (diff < 0) diff += 24;
+                  totOreInput.value = Math.round(diff * 100) / 100;
+                } else {
+                  totOreInput.value = '';
+                }
+              }
+              window.chiudiFormProgetto = function() {
+                document.getElementById('form-progetto-popup').style.display = 'none';
+              }
+              window.salvaDatiProgetto = function() {
+                const giorno = document.getElementById('progetto-giorno').value;
+                const operatore = document.getElementById('progetto-operatore').value;
+                const mese = document.getElementById('progetto-mese').value;
+                const anno = document.getElementById('progetto-anno').value;
+                const oraInizioGlobale = document.getElementById('progetto-ora-inizio-globale').value;
+                const oraFineGlobale = document.getElementById('progetto-ora-fine-globale').value;
+                // Raccogli tutte le procedure inserite
+                const lista = document.getElementById('progetto-procedure-list');
+                const procedure = Array.from(lista.querySelectorAll('.progetto-procedura-item')).map(div => ({
+                  tipoProcedura: div.querySelector('.progetto-tipo-procedura').value,
+                  paziente: div.querySelector('.progetto-paziente').value,
+                  cartella: div.querySelector('.progetto-cartella').value
+                })).filter(p => p.tipoProcedura || p.paziente || p.cartella);
+                // Salva oggetto con orario globale e array di procedure
+                google.script.run.withSuccessHandler(() => {
+                  document.getElementById('progetto-feedback').style.display = 'block';
+                  document.getElementById('progetto-feedback').style.color = '#176d1a';
+                  document.getElementById('progetto-feedback').textContent = 'Dati progetto salvati!';
+                  setTimeout(window.chiudiFormProgetto, 800); // chiudi dopo breve attesa
+                }).withFailureHandler(() => {
+                  document.getElementById('progetto-feedback').style.display = 'block';
+                  document.getElementById('progetto-feedback').style.color = '#dc3545';
+                  document.getElementById('progetto-feedback').textContent = 'Errore salvataggio!';
+                }).salvaDatiProgetto({giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure});
+              }
+          previewHtml += '</table></div>';
+
+          // Aggiungi i pulsanti per generare le tabelle
+          if (mese && anno) {
+            previewHtml += '<div class="d-flex justify-center gap-18 mt-15em">' +
+              '<button class="btn-excel" onclick="window.generaTabellaProgetto && window.generaTabellaProgetto(' + mese + ', ' + anno + ')">Genera Tabella Progetto</button>' +
+              '<button class="btn-pdf" onclick="window.generaTabellaUnificata && window.generaTabellaUnificata(' + mese + ', ' + anno + ')">Genera Turni Vasco/REPE</button>' +
+              '</div>';
+          }
+// --- TABELLA PROGETTO DA FOGLIO PROGETTI ---
+
+// --- TABELLA PROGETTO DA FOGLIO PROGETTI ---
+window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
+  // Rende la funzione globale per l'ambiente Apps Script
+  // Scegli il contenitore giusto: se esiste reperibilita-container (archivio), usa quello, altrimenti preview-container (pagina principale)
+  let container = document.getElementById('reperibilita-container');
+  if (!container) {
+    container = document.getElementById('preview-container');
+  }
+  if (!container) {
+    alert('Errore: nessun contenitore trovato per mostrare la tabella progetto!');
+    console.error('[DEBUG generaTabellaProgetto] Nessun container trovato!');
+    return;
+  }
+  container.innerHTML = `<p class="progetto-msg-blue">Generazione tabella progetto in corso...</p>`;
+  setTimeout(() => {
+    if (container.innerHTML.includes('Generazione tabella progetto in corso')) {
+      container.innerHTML = `<span class="text-danger">Nessun turno trovato per questo mese/anno.</span>`;
+    }
+  }, 5000);
+  google.script.run.withSuccessHandler(function(dati) {
+    if (!Array.isArray(dati) || dati.length === 0) {
+      container.innerHTML = `<p class='progetto-msg-red'>Nessun progetto trovato per il mese selezionato.</p>`;
+      return;
+    }
+    let html = `<h3 class='color-green text-center progetto-titolo'>PROGETTI VASCOLARI MESE ${('0'+mese).slice(-2)}/${anno}</h3>`;
+    html += `<div class='d-flex justify-center gap-18 mt-1-5em'>
+        <button class="btn-excel" onclick="window.generaTabellaProgetto && window.generaTabellaProgetto(' + mese + ', ' + anno + ')">Genera Tabella Progetto</button>' +
+        '<button class="btn-pdf" onclick="window.generaTabellaUnificata && window.generaTabellaUnificata(' + mese + ', ' + anno + ')">Genera Turni Vasco/REPE</button>'
+      </div>`;
+    html += `<div class='progetto-table-wrapper'><table id="tabella-progetto-stampabile" class='progetto-table'>`;
+    html += `<caption class='caption-progetto'>PROGETTI VASCOLARI MESE APRILE 26</caption>`;
+    html += `<tr class='tr-progetto-header'>
+      <th class='th-progetto'>TSRM</th>
+      <th class='th-progetto th-progetto-data'>Data</th>
+      <th class='th-progetto th-progetto-giorno'>Giorno</th>
+      <th class='th-progetto th-progetto-entrata'>Ora Entrata</th>
+      <th class='th-progetto th-progetto-uscita'>Ora Uscita</th>
+      <th class='th-progetto th-progetto-totore'>Totale Ore</th>
+    </tr>`;
+    // Funzione per chiudere la tabella progetto
+    window.chiudiTabellaProgetto = function chiudiTabellaProgetto() {
+      let container = document.getElementById('reperibilita-container');
+      if (!container) container = document.getElementById('preview-container');
+      if (container) container.innerHTML = '';
+    }
+    // Esporta la tabella progetto in PDF
+    window.esportaProgettoPDF = function esportaProgettoPDF() {
+      const tabella = document.getElementById('tabella-progetto-stampabile');
+      if (!tabella) return alert('Tabella non trovata!');
+      let win = window.open('', '', 'width=900,height=700');
+      win.document.write('<html><head><title>Progetto PDF</title>');
+      win.document.write('<style>table{border-collapse:collapse;width:100%;font-size:1.05em;background:#fff;}caption{caption-side:top;padding:12px 0 8px 0;font-size:1.18em;font-weight:bold;color:#1a2a3a;background:#eaf2fa;border-radius:10px 10px 0 0;}th,td{border:1px solid #b0b0b0;padding:6px;text-align:center;color:#1a2a3a;}th{background:#eaf2fa;color:#1a2a3a;font-weight:bold;}</style>');
+      win.document.write('</head><body>');
+      let tabellaHtml = tabella.outerHTML;
+      if (!/\<caption/i.test(tabellaHtml)) {
+        tabellaHtml = tabellaHtml.replace('<table', "<table><caption class='caption-progetto'>PROGETTI VASCOLARI MESE APRILE 26</caption>");
+      }
+      win.document.write(tabellaHtml);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+    // Esporta la tabella progetto in Excel
+    window.esportaProgettoExcel = function esportaProgettoExcel() {
+      // Ricostruisco la tabella per l'export senza la scritta [FESTIVO]
+      let csv = 'REPERIBILITÀ VASCOLARE MESE ' + NOMI_MESI[mese-1].toUpperCase() + ' ' + anno + '\n"Data & Giorno","TSRM"\n';
+      Object.values(giorniDelMese).forEach(turno => {
+        const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+        const dataLabel = turno.data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) + ' (' + giornoSettimana + ')';
+        const mattina = (turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+        const pomeriggio = (turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+        const notte = (turno.notte || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+        csv += `"${dataLabel.replace(/"/g,'""')}","${mattina.replace(/"/g,'""')}","${pomeriggio.replace(/"/g,'""')}","${notte.replace(/"/g,'""')}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reperibilita_${NOMI_MESI[mese-1]}_${anno}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);}, 500);
+    }
+    dati.forEach(row => {
+      const isFestivo = row.isFestivo;
+      const coloreData = isFestivo ? '#b80000' : '#111';
+      const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+      // Normalizza nome operatore se abbreviato
+      let op = row.operatore;
+      if (op && op.length <= 5) {
+        const mappaNomi = { 'MACA':'MACALUSO', 'DINO':'DINOLFO', 'NAPO':'NAPOLI', 'VENTI':'VENTIMIGLIA', 'VENT':'VENTIMIGLIA' };
+        const op4 = op.toUpperCase().substring(0,4);
+        if (mappaNomi[op4]) op = mappaNomi[op4];
+      }
+      // Calcola la differenza tra oraFine e oraInizio (formato HH:MM)
+      let totOre = '';
+      if (row.oraInizio && row.oraFine) {
+        const [h1, m1] = row.oraInizio.split(':').map(Number);
+        const [h2, m2] = row.oraFine.split(':').map(Number);
+        if (!isNaN(h1) && !isNaN(m1) && !isNaN(h2) && !isNaN(m2)) {
+          let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+          if (diff < 0) diff += 24 * 60; // gestisce passaggio mezzanotte
+          const ore = Math.floor(diff / 60);
+          const min = diff % 60;
+          totOre = ore + (min > 0 ? (':' + (min < 10 ? '0' : '') + min) : '');
+        }
+      }
+      html += `<tr class='tr-progetto'>`+
+        `<td class='color-va bg-lightblue'>${op}</td>`+
+        `<td class='color-va bg-lightblue'>${row.data}</td>`+
+        `<td class='color-va bg-lightblue'>${row.giornoSett}</td>`+
+        `<td class='color-va bg-lightblue'>${row.oraInizio}</td>`+
+        `<td class='color-va bg-lightblue'>${row.oraFine}</td>`+
+        `<td class='color-va bg-lightblue'>${totOre}</td>`+
+      `</tr>`;
+    });
+    html += `</table></div>`;
+    container.innerHTML = html;
+  // catch già gestito nella fetch
+};
+
+          document.getElementById('archivio-preview').innerHTML = previewHtml;
+        } else {
+          document.getElementById('archivio-preview').innerHTML = '<span class="text-danger">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
+        }
+      // fetch già gestito sopra
+    }
+
+    // Variabile globale per i dati della tabella: usare sempre window.datiTabellaCorrente
+    function generaTabellaReperibilita(mese, anno) {
+      // Rende la funzione globale per l'ambiente Apps Script
+      window.generaTabellaReperibilita = generaTabellaReperibilita;
+      const container = document.getElementById('reperibilita-container');
+      container.innerHTML = `<p class="msg-blue">Generazione tabella reperibilità in corso...</p>`;
+      const datiTabella = window.datiTabellaCorrente;
+      if (!datiTabella || !mese || !anno) {
+        container.innerHTML = '<span class="text-danger">Dati insufficienti per generare la tabella.</span>';
+        return;
+      }
+
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const GIORNI_SETT_COMPLETI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+      const reperibilita = [];
+      const header = datiTabella[0];
+
+      const mappaNomi = {
+        "MACA": "MACALUSO",
+        "DINO": "DINOLFO",
+        "NAPO": "NAPOLI",
+        "VENTI": "VENTIMIGLIA"
+      };
+      
+      // Itera sugli operatori (saltando la riga header)
+      for (let i = 1; i < datiTabella.length; i++) {
+        const nomeAbbreviato = (datiTabella[i][0] || '').toUpperCase().substring(0, 4);
+        const operatore = mappaNomi[nomeAbbreviato] || datiTabella[i][0];
+        // Itera sui giorni (saltando la colonna nome operatore)
+        for (let j = 1; j < datiTabella[i].length; j++) {
+          // Normalizza la cella: maiuscole, niente spazi
+          const cella = String(datiTabella[i][j] || '').toUpperCase();
+          // Gestione robusta: cerca "REP" come valore singolo o tra più valori separati da / o spazi
+          const valori = cella.split(/[\/]/).map(v => v.trim());
+          if (valori.some(v => v === 'REP')) {
+            const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+            if (giornoMatch) {
+              const giorno = parseInt(giornoMatch[1], 10);
+              const data = new Date(anno, mese - 1, giorno);
+              reperibilita.push({
+                data: data,
+                giornoSett: GIORNI_SETT_COMPLETI[data.getDay()],
+                operatore: operatore
+              });
+            }
+          }
+        }
+      }
+
+      // Ordina per data
+      reperibilita.sort((a, b) => a.data - b.data);
+
+      if (reperibilita.length === 0) {
+        container.innerHTML = `<p class="msg-blue msg-italic">Nessuna reperibilità trovata per ${NOMI_MESI[mese-1]} ${anno}.</p>`;
+      } else {
+        // Header personalizzato
+        let html = `<h3 class='color-bordeaux text-center mb-02em fs-125em ls-1px'>REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`;
+        html += `<div class="d-flex justify-center gap-18 mb-1em">
+          <button onclick="esportaReperibilitaPDF()" class="btn-pdf">Esporta PDF</button>
+          <button onclick="esportaReperibilitaExcel()" class="btn-excel">Esporta Excel</button>
+          <button onclick="chiudiTabellaReperibilita()" class="btn-grey">Chiudi</button>
+        </div>`;
+        // Funzione per chiudere la tabella reperibilità
+        window.chiudiTabellaReperibilita = function() {
+          const container = document.getElementById('reperibilita-container');
+          if (container) container.innerHTML = '';
+        };
+        html += `<table id="tabella-reperibilita-stampabile" class="reperibilita-table">
+          <tr class="reperibilita-header">
+            <th class="reperibilita-th">Data &amp; Giorno</th>
+            <th class="reperibilita-th">TSRM</th>
+          </tr>`;
+        // Calcolo festività
+        const pasqua = getPasqua(anno);
+        reperibilita.forEach(rep => {
+          const giornoSettimana = rep.giornoSett.charAt(0).toUpperCase() + rep.giornoSett.slice(1, 3);
+          let operatore = rep.operatore.replace('VENTI', 'VENTIMIGLIA');
+          const data = rep.data;
+          const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+          const tdDataClass = isFestivo ? 'color-festivo' : 'color-feriale';
+          html += `<tr class="tr-progetto">` +
+            `<td class="fw-bold ${tdDataClass}">${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})} <span class="${isFestivo ? 'color-festivo' : 'color-feriale'} fs-095em fw-normal">(${giornoSettimana})</span></td>` +
+            `<td class="fw-bold color-va">${operatore.replace('VENTI', 'VENTIMIGLIA')}</td>` +
+          `</tr>`;
+        });
+        html += `</table>`;
+
+        // Aggiunta numeri di telefono
+        html += `<div class="contatti-box">
+          <h4 class="contatti-title">Contatti</h4>
+          <p class="contatti-item"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+          <p class="contatti-item"><strong>MACALUSO:</strong> 329 7332321</p>
+          <p class="contatti-item"><strong>DINOLFO:</strong> 392 6817053</p>
+          <p class="contatti-item"><strong>NAPOLI:</strong> 333 4745282</p>
+        </div>`;
+
+        container.innerHTML = html;
+
+        // Funzione esporta PDF
+        window.esportaReperibilitaPDF = function() {
+          const tabella = document.getElementById('tabella-reperibilita-stampabile');
+          if (!tabella) return alert('Tabella non trovata!');
+          const win = window.open('', '', 'width=900,height=700');
+          win.document.write('<html><head><title>Reperibilità Vascolare</title>');
+          win.document.write('<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;font-size:1.08em;}th,td{border:1px solid #b0b0b0;padding:8px;text-align:center;}th{background:#222d3b;color:#fff;}tr:nth-child(even){background:#f4f8fb;}</style>');
+          win.document.write('</head><body>');
+          // Titolo con accento
+          win.document.write(`<h3 class='color-bordeaux text-center mb-02em fs-125em ls-1px'>REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`);
+          // Ricostruisco la tabella con colorazione festivi
+          const pasqua = getPasqua(anno);
+          let html = `<table class='reperibilita-table export-table'>`;
+          html += `<tr class='reperibilita-header'><th class='reperibilita-th'>Data &amp; Giorno</th><th class='reperibilita-th'>TSRM</th></tr>`;
+          reperibilita.forEach(rep => {
+            const giornoSettimana = rep.giornoSett.charAt(0).toUpperCase() + rep.giornoSett.slice(1, 3);
+            let operatore = rep.operatore.replace('VENTI', 'VENTIMIGLIA');
+            const data = rep.data;
+            const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+            const coloreData = isFestivo ? '#b80000' : '#111';
+            const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+            const tdDataClass = isFestivo ? 'color-festivo' : 'color-feriale';
+            const giornoClass = isFestivo ? 'color-festivo' : 'color-feriale';
+            html += `<tr class='tr-progetto'><td class='fw-bold ${tdDataClass}'>${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} <span class='${giornoClass} fs-095em fw-normal'>(${giornoSettimana})</span></td><td class='fw-bold color-va'>${operatore.replace('VENTI', 'VENTIMIGLIA')}</td></tr>`;
+          });
+          html += `</table>`;
+          html += `<div class="contatti-box">
+            <h4 class="contatti-title">Contatti</h4>
+            <p class="contatti-item"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+            <p class="contatti-item"><strong>MACALUSO:</strong> 329 7332321</p>
+            <p class="contatti-item"><strong>DINOLFO:</strong> 392 6817053</p>
+            <p class="contatti-item"><strong>NAPOLI:</strong> 333 4745282</p>
+          </div>`;
+          win.document.write(html);
+          win.document.write('</body></html>');
+          win.document.close();
+          setTimeout(()=>{win.print();},400);
+        };
+
+        // Funzione esporta Excel
+        window.esportaReperibilitaExcel = function() {
+          // Ricostruisco la tabella per l'export senza la scritta [FESTIVO]
+          let csv = 'REPERIBILITÀ VASCOLARE MESE ' + NOMI_MESI[mese-1].toUpperCase() + ' ' + anno + '\n"Data & Giorno","TSRM"\n';
+          Object.values(giorniDelMese).forEach(turno => {
+            const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+            const dataLabel = turno.data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) + ' (' + giornoSettimana + ')';
+            const mattina = (turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const pomeriggio = (turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const notte = (turno.notte || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            csv += `"${dataLabel.replace(/"/g,'""')}","${mattina.replace(/"/g,'""')}","${pomeriggio.replace(/"/g,'""')}","${notte.replace(/"/g,'""')}"\n`;
+          });
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Reperibilita_${NOMI_MESI[mese-1]}_${anno}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);}, 500);
+        };
+    }
+
+  // Salva anche in localStorage per persistenza tra sessioni
+  function salvaStatoInLocalStorage() {
+    if (!meseCorrente || !annoCorrente) return;
+    const cacheKey = `stato_turni_${annoCorrente}-${meseCorrente}`;
+    // Save the current state object to localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(currentSelections));
+  }
+
+    // --- NUOVA FUNZIONE TABELLA UNIFICATA ---
+    function generaTabellaUnificata(mese, anno) {
+      window.generaTabellaUnificata = generaTabellaUnificata;
+      const container = document.getElementById('reperibilita-container'); // Usa lo stesso container per coerenza
+      container.innerHTML = `<p class="msg-blue">Generazione tabella Turni e Reperibilità in corso...</p>`;
+      const datiTabella = window.datiTabellaCorrente;
+
+      if (!datiTabella || !mese || !anno) {
+        container.innerHTML = '<span class="text-danger">Dati insufficienti per generare la tabella.</span>';
+        return;
+      }
+
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const GIORNI_SETT_COMPLETI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+      const giorniDelMese = {};
+      const header = datiTabella[0];
+      const mappaNomi = { "MACA": "MACALUSO", "DINO": "DINOLFO", "NAPO": "NAPOLI", "VENTI": "VENTIMIGLIA" };
+
+      // 1. Inizializza l'oggetto per ogni giorno del mese
+      for (let d = 1; d <= new Date(anno, mese, 0).getDate(); d++) {
+        const data = new Date(anno, mese - 1, d);
+        giorniDelMese[d] = {
+          data: data,
+          giornoSett: GIORNI_SETT_COMPLETI[data.getDay()],
+          mattina: '',
+          pomeriggio: '',
+          notte: ''
+        };
+      }
+
+      for (let i = 1; i < datiTabella.length; i++) { // Itera sugli operatori
+          const nomeAbbreviato = (datiTabella[i][0] || '').toUpperCase().substring(0, 4);
+          const operatore = mappaNomi[nomeAbbreviato] || datiTabella[i][0];
+
+          for (let j = 1; j < datiTabella[i].length; j++) { // Itera sui giorni
+              const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+              if (!giornoMatch) continue;
+              const giorno = parseInt(giornoMatch[1], 10);
+              const dataGiorno = giorniDelMese[giorno].data;
+
+              const cellContent = String(datiTabella[i][j] || '');
+              const shifts = cellContent.split(' / ').map(s => s.trim());
+
+              for (const shift of shifts) {
+                  if (shift.includes('VA<small class="color-blue">(M)</small>')) {
+                      giorniDelMese[giorno].mattina = operatore;
+                  }
+                  else if (shift.includes('VA<small class="color-orange">(P)</small>')) {
+                      giorniDelMese[giorno].pomeriggio = operatore;
+                  }
+                  else if (shift === 'PRO') {
+                      giorniDelMese[giorno].pomeriggio = `${operatore}<br><small>(PROGETTO)</small>`;
+                  }
+                  else if (shift === 'REP') {
+                      if (dataGiorno.getDay() === 6) { // Sabato
+                          giorniDelMese[giorno].pomeriggio = `${operatore}<br><small class="color-bordeaux">(REPERIBILE)</small>`;
+                      }
+                      giorniDelMese[giorno].notte = operatore;
+                  }
+              }
+          }
+      }
+
+      // 3. Costruisci l'HTML
+      let html = `<h3 class='color-info text-center mb-02em fs-125em ls-1px'>TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`;
+        html += `<div class='d-flex justify-center gap-18 mb-1em'>
+          <button onclick="esportaTabellaUnificataPDF()" class="btn-pdf">Esporta PDF</button>
+          <button onclick="esportaTabellaUnificataExcel()" class="btn-excel">Esporta Excel</button>
+          <button onclick="chiudiTabellaUnificata()" class="btn-grey">Chiudi</button>
+        </div>`;
+        
+        window.chiudiTabellaUnificata = function() {
+          const container = document.getElementById('reperibilita-container');
+          if (container) container.innerHTML = '';
+        };
+
+        html += `<table id="tabella-unificata-stampabile" class="progetto-table table-shadow table-radius" >
+          <tr class="bg-table-header">
+            <th class="table-header-large">Data &amp; Giorno</th>
+            <th class="table-header">TSRM Mattina</th>
+            <th class="table-header">TSRM Pomeriggio</th>
+            <th class="table-header">TSRM Notte (REPE)</th>
+          </tr>`;
+        
+        const pasqua = getPasqua(anno);
+        Object.values(giorniDelMese).forEach(turno => {
+          const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+          const data = turno.data;
+          const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+          const tdDataClass = isFestivo ? 'color-festivo' : 'color-feriale';
+          let pomeriggioClass = 'color-blue';
+          if ((turno.pomeriggio || '').includes('PROGETTO')) pomeriggioClass = 'color-pro';
+          else if ((turno.pomeriggio || '').includes('REPERIBILE')) pomeriggioClass = 'color-bordeaux';
+          html += `<tr class='tr-progetto'>
+            <td class='fw-bold ${tdDataClass}'>${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} <span class='${tdDataClass} fs-095em fw-normal'>(${giornoSettimana})</span></td>
+            <td class='fw-bold color-va'>${(turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+            <td class='fw-bold ${pomeriggioClass}'>${(turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+            <td class='fw-bold color-bordeaux'>${(turno.notte || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+
+        // Aggiunta numeri di telefono (stile migliorato)
+        html += `<div class="contatti-box">
+          <h4 class="contatti-title">Contatti</h4>
+          <p class="contatti-item"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+          <p class="contatti-item"><strong>MACALUSO:</strong> 329 7332321</p>
+          <p class="contatti-item"><strong>DINOLFO:</strong> 392 6817053</p>
+          <p class="contatti-item"><strong>NAPOLI:</strong> 333 4745282</p>
+        </div>`;
+
+        container.innerHTML = html;
+
+        window.esportaTabellaUnificataPDF = function() {
+          const tabella = document.getElementById('tabella-unificata-stampabile');
+          if (!tabella) return alert('Tabella non trovata!');
+          const win = window.open('', '', 'width=900,height=700');
+          win.document.write('<html><head><title>Turni e Reperibilità Vascolare</title>');
+          win.document.write('<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;font-size:1.05em;}th,td{border:1px solid #b0b0b0;padding:8px;text-align:center;}th{background:#005f5f;color:#fff;}tr:nth-child(even){background:#f4f8fb;}</style>');
+          win.document.write('</head><body>');
+          win.document.write(`<h3 class='color-info text-center mb-02em fs-125em ls-1px'>TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`);
+          win.document.write(tabella.outerHTML.replace(/VENTI/g, 'VENTIMIGLIA'));
+          // Aggiungi contatti al PDF
+          win.document.write(document.querySelector('#reperibilita-container > div:last-of-type').outerHTML);
+          win.document.write('</body></html>');
+          win.document.close();
+          setTimeout(()=>{win.print();},400);
+        };
+
+        window.esportaTabellaUnificataExcel = function() {
+          let csv = `TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}\n"Data & Giorno","TSRM Mattina","TSRM Pomeriggio","TSRM Notte (REPE)"\n`;
+          Object.values(giorniDelMese).forEach(turno => {
+            const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+            const dataLabel = turno.data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) + ' (' + giornoSettimana + ')';
+            const mattina = (turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const pomeriggio = (turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const notte = (turno.notte || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            csv += `"${dataLabel.replace(/"/g,'""')}","${mattina.replace(/"/g,'""')}","${pomeriggio.replace(/"/g,'""')}","${notte.replace(/"/g,'""')}"\n`;
+          });
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Turni_e_REPE_${NOMI_MESI[mese-1]}_${anno}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);}, 500);
+        };
+    }
+
+  </script>
+  <script>
+  // Stub globale per evitare ReferenceError se la funzione non è definita altrove
+  window.caricaListaArchivio = window.caricaListaArchivio || function(){};
+  // Feedback visivo se la tabella progetti non viene generata
+  if (!window.generaTabellaProgetto) {
+    const btns = document.querySelectorAll('button[onclick*="generaTabellaProgetto"]');
+    btns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        alert('Funzione generaTabellaProgetto non disponibile!');
+      });
+    });
+  }
   </script>
 </body>
 </html>
