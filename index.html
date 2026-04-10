@@ -3,7 +3,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Gestione Turni</title>
   <link rel="stylesheet" href="custom-styles.css">
   <style>
@@ -12,23 +12,21 @@
 </head>
 <body>
 
-  <h2>Gestione Turni</h2>
+  <h1>Gestione Turni</h1>
   <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
   <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
   <button onclick="caricaTurni()">Carica Turni</button>
-  <button id="pulisci-tabella-btn" onclick="pulisciTabella()">Pulisci Turni Mese</button>
-  <button onclick="salvaTurniManuale()" class="save-btn">Salva Turni &#128190;</button>
+  <button onclick="pulisciTabella()" class="btn-danger">Pulisci Turni Mese</button>
+  <button onclick="salvaTurniManuale()" class="btn-success">Salva Turni 💾</button>
   <span id="salva-turni-feedback"></span>
   <!-- Popup di conferma personalizzato -->
-  <div id="custom-confirm-popup">
-    <div class="popup-inner">
-      <p id="custom-confirm-msg">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
-      <div class="flex-row">
-        <button id="custom-confirm-ok" class="save-btn">Conferma</button>
-        <button id="custom-confirm-cancel" class="save-btn">Annulla</button>
-      </div>
+    <div id="custom-confirm-popup" class="popup-overlay" style="display:none;">
+        <div class="popup-content">
+            <p>Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
+            <button id="custom-confirm-ok">Conferma</button>
+            <button id="custom-confirm-cancel">Annulla</button>
+        </div>
     </div>
-  </div>
 
   <div id="output"></div>
   <div id="legenda-operatori"></div>
@@ -42,9 +40,9 @@
     <div id="archivio-preview"></div>
     <div id="reperibilita-container"></div>
   </div>
-  <div id="loader-overlay" class="loader-overlay" style="display:none">
-    <div class="loader"></div>
-  </div>
+    <div id="loader-overlay" style="display:none;">
+        <div class="loader"> Caricamento in corso... </div>
+    </div>
 
   <script>
   // --- CONFIGURAZIONE URL APPSCRIPT ---
@@ -76,10 +74,6 @@
 
 </body>
 </html>
-
-    function isLandscapeCompatta() {
-      return window.matchMedia('(orientation: landscape)').matches && window.innerHeight <= 500;
-    }
 
     function isPortraitMobile() {
       const isPortrait = window.matchMedia('(orientation: portrait)').matches;
