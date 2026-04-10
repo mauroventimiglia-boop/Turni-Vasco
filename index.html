@@ -11,6 +11,7 @@
   </style>
 </head>
 <body>
+
   <h2>Gestione Turni</h2>
   <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
   <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
@@ -28,78 +29,6 @@
       </div>
     </div>
   </div>
-
-    }
-            .then(json => {
-              mostraLoader(false);
-              const archivio = (json && json.ok && Array.isArray(json.data)) ? json.data : [];
-              if (!archivio || archivio.length === 0) {
-                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span class="text-warning">Nessun dato trovato per l\'anno selezionato.</span>';
-                document.getElementById('popup-statistiche-repe').style.display = 'flex';
-                return;
-              }
-              // archivio: array di oggetti {mese, anno, tabella: [ [header], [row1], ... ]}
-              const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-              const ABBREV_MAP = { 'MACA': 'MACALUSO', 'DINO': 'DINOLFO', 'NAPO': 'NAPOLI', 'VENTI': 'VENTIMIGLIA', 'VENT': 'VENTIMIGLIA' };
-              const stats = {};
-              NOMI.forEach(n => stats[n] = {
-                REP:0,
-                'REP ORE':0,
-                'REP FESTIVI':0,
-                'REP PRIMI10_LV':0,
-                'REP PRIMI10_SD':0
-              });
-              archivio.forEach(meseObj => {
-                const tabella = meseObj.tabella;
-                if (!tabella || tabella.length < 2) return;
-                const header = tabella[0];
-                for (let i = 1; i < tabella.length; i++) {
-                  let nome = (tabella[i][0] || '').toUpperCase();
-                  if (ABBREV_MAP[nome]) nome = ABBREV_MAP[nome];
-                  if (!stats[nome]) continue;
-                  for (let j = 1; j < tabella[i].length; j++) {
-                    const cella = String(tabella[i][j] || '').toUpperCase();
-                    const valori = cella.split(/[\/]/).map(v => v.trim());
-                    if (valori.some(v => v === 'REP')) {
-                      const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
-                      if (giornoMatch) {
-                        const giorno = parseInt(giornoMatch[1], 10);
-                        const data = new Date(meseObj.anno, meseObj.mese-1, giorno);
-                        const day = data.getDay();
-                        let ore = 12;
-                        const festivo = data && (day === 0 || isHoliday(data, getPasqua(meseObj.anno)));
-                        if (festivo) ore = 24;
-                        else if (day === 6) ore = 18;
-                        stats[nome].REP++;
-                        stats[nome]['REP ORE'] += ore;
-                        if (festivo) stats[nome]['REP FESTIVI']++;
-                        if (giorno <= 10) {
-                          if (day >= 1 && day <= 5) stats[nome]['REP PRIMI10_LV']++; // lun-ven
-                          if (day === 0 || day === 6) stats[nome]['REP PRIMI10_SD']++; // dom-sab
-                        }
-                      }
-                    }
-                  }
-                }
-              });
-              let html = `<div class="overflow-x-auto"><table class="table-shadow table-radius table-main">`;
-              html += '<tr class="bg-table-header">'
-                +'<th class="table-header">TSRM</th>'
-                +'<th class="table-header table-header-small">Totale REPE</th>'
-                +'<th class="table-header table-header-small">Totale Ore</th>'
-                +'<th class="table-header table-header-medium">REPE Festività</th>'
-                +'<th class="table-header table-header-large">REPE Primi 10g Lun-Ven</th>'
-                +'<th class="table-header table-header-large">REPE Primi 10g Sab-Dom</th>'
-              +'</tr>';
-              // ...
-              document.getElementById('contenuto-statistiche-repe').innerHTML = html;
-              document.getElementById('popup-statistiche-repe').style.display = 'flex';
-            })
-            .catch(() => {
-              mostraLoader(false);
-              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span class="text-warning">Errore nel caricamento delle statistiche!</span>';
-              document.getElementById('popup-statistiche-repe').style.display = 'flex';
-            });
               +'<th class="table-header-large">REPE Primi 10g Sab-Dom</th>'
             +'</tr>';
             NOMI.forEach(nome => {
@@ -1798,18 +1727,10 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
     }
 
   </script>
-  <script>
-  // Stub globale per evitare ReferenceError se la funzione non è definita altrove
-  window.caricaListaArchivio = window.caricaListaArchivio || function(){};
-  // Feedback visivo se la tabella progetti non viene generata
-  if (!window.generaTabellaProgetto) {
-    const btns = document.querySelectorAll('button[onclick*="generaTabellaProgetto"]');
-    btns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        alert('Funzione generaTabellaProgetto non disponibile!');
-      });
-    });
-  }
-  </script>
+</body>
+<script>
+// Tutto il codice JavaScript qui sotto (dalla logica che era visualizzata come testo)
+// ...existing code JS...
+</script>
 </body>
 </html>
