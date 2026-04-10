@@ -92,11 +92,12 @@
   background-color: #dc3545;
   color: #fff;
 }
-.save-btn {
+#.save-btn {
   background: linear-gradient(135deg,#b2f0d0,#7de8b0);
   color: #2e7d52;
-  /* Popup e overlay */
-  .popup-overlay {
+}
+
+.popup-overlay {
   border: 1px solid #a0e8c5;
   border-radius: 5px;
   font-size: 0.9em;
@@ -108,7 +109,9 @@
   display: none;
   font-size: 0.82em;
   font-weight: 600;
-  .popup-inner {
+}
+
+.popup-inner {
   margin-left: 6px;
 }
 #custom-confirm-popup {
@@ -117,34 +120,30 @@
   top: 0;
   left: 0;
   width: 100vw;
-  .popup-title {
   height: 100vh;
   background: rgba(0,0,0,0.4);
   z-index: 4000;
   align-items: center;
-  .popup-form {
   justify-content: center;
 }
 #custom-confirm-popup .popup-inner {
   background: #fff;
-  .popup-row {
   padding: 2em 1.5em 1.5em 1.5em;
   border-radius: 10px;
   max-width: 400px;
   width: 90vw;
   box-shadow: 0 2px 16px #0003;
-  .popup-label {
   text-align: center;
 }
 #custom-confirm-msg {
   font-size: 1.1em;
   color: #333;
-  .popup-input-time {
+}
+.popup-input-time {
   margin: 0 0 1.5em 0;
 }
 .flex-row {
   display: flex;
-  .popup-input-tot {
   gap: 16px;
   justify-content: center;
 }
@@ -152,14 +151,12 @@
   background-color: #dc3545;
 }
 #custom-confirm-cancel {
-  .popup-btn-row {
   background-color: #6c757d;
 }
 #popup-inserisci-anno-repe {
   display: none;
   position: fixed;
   top: 0;
-  .popup-btn-row-end {
   left: 0;
   width: 100vw;
   height: 100vh;
@@ -167,7 +164,6 @@
   z-index: 3000;
   align-items: center;
   justify-content: center;
-  .popup-btn-confirm {
 }
 #popup-inserisci-anno-repe .popup-inner {
   background: #fff;
@@ -175,7 +171,6 @@
   border-radius: 10px;
   max-width: 340px;
   width: 96vw;
-  .popup-btn-cancel {
   box-shadow: 0 2px 16px #0002;
   position: relative;
   display: flex;
@@ -183,37 +178,35 @@
   align-items: center;
 }
 #popup-inserisci-anno-repe h3 {
-  .popup-btn-add {
   color: #b80000;
   text-align: center;
   margin-top: 0;
   margin-bottom: 1em;
   font-size: 1.15em;
 }
-#input-anno-repe {
-  .popup-feedback {
+.popup-feedback {
   font-size: 1.1em;
   padding: 7px 12px;
   border-radius: 6px;
-  .progetto-procedura-item {
+}
+.progetto-procedura-item {
   border: 1px solid #bbb;
   width: 120px;
   text-align: center;
   outline: none;
 }
-  .progetto-tipo-procedura, .progetto-paziente, .progetto-cartella {
+.progetto-tipo-procedura, .progetto-paziente, .progetto-cartella {
 .flex-gap {
   margin-top: 1.5em;
   display: flex;
-  .popup-label span {
   gap: 16px;
   justify-content: center;
   width: 100%;
-  .popup-label input[type="text"],
-  .popup-label input[type="time"] {
+}
+.popup-label input[type="text"],
+.popup-label input[type="time"] {
 }
 .btn-green {
-  .popup-btn-remove {
   background: #176d1a;
   color: #fff;
   padding: 7px 22px;
@@ -224,16 +217,6 @@
 .btn-red {
   background: #f8d7da;
   color: #b80000;
-  .nowrap { white-space: nowrap; }
-  .mt-1 { margin-top: 1em; }
-  .mb-05 { margin-bottom: 0.5em; }
-  .color-blue { color: blue; }
-  .color-orange { color: orange; }
-  .color-green { color: #176d1a; }
-  .color-bordeaux { color: #b80000; }
-  .color-pro { color: #006b2e; }
-  .color-warning { color: #ff9800; }
-  .color-info { color: #007bff; }
   padding: 7px 18px;
   border: none;
   border-radius: 4px;
