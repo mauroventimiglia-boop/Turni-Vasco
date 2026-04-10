@@ -26,7 +26,6 @@
             </select>
             <label>Anno:</label>
             <input type="number" id="anno" value="2026">
-            
             <button onclick="caricaTurni()" class="btn-primary">Carica Turni</button>
             <button onclick="pulisciTabella()" class="btn-danger">Pulisci Turni Mese</button>
             <button onclick="salvaTurniManuale()" class="btn-success">Salva Turni 💾</button>
@@ -55,32 +54,24 @@
     <div id="reperibilita-container"></div>
 
     <script>
-        // --- CONFIGURAZIONE ---
-        // Sostituisci questo URL con il tuo reale
         const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbygfswYatsxqiZrZoVDDZzo20XolahNbEyaUg9Zq0wp9jxSt-0ltxyL2nzYirgnoBJ-KQ/exec";
-        
         const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
         const GIORNI_SETT = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-        const MESI_RR = [7, 12]; 
+        const MESI_RR = [7, 12];
 
         let currentSelections = {};
         let currentTurniData = [];
         let meseCorrente, annoCorrente;
 
-        // --- FUNZIONI CORE ---
-
         async function caricaTurni() {
             const mese = document.getElementById('mese').value;
             const anno = document.getElementById('anno').value;
-            
             mostraLoader(true);
             try {
-                const resTurni = await fetch(${APPSCRIPT_URL}?action=getTurniMese&mese=${mese}&anno=${anno});
+                const resTurni = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${mese}&anno=${anno}`);
                 const dataTurni = await resTurni.json();
-                
-                const resStato = await fetch(${APPSCRIPT_URL}?action=getStatoTurni&mese=${mese}&anno=${anno});
+                const resStato = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${mese}&anno=${anno}`);
                 const dataStato = await resStato.json();
-
                 if (dataTurni.ok) {
                     currentTurniData = dataTurni.data;
                     meseCorrente = mese;
@@ -91,7 +82,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                alert("Errore nel caricamento dati. Verifica l'URL di Google Apps Script.");
+                alert("Errore nel caricamento dati.");
             }
             mostraLoader(false);
         }
@@ -100,7 +91,6 @@
             const feedback = document.getElementById('salva-turni-feedback');
             feedback.textContent = "Salvataggio...";
             feedback.style.display = "inline";
-
             try {
                 await fetch(APPSCRIPT_URL, {
                     method: 'POST',
@@ -121,23 +111,18 @@
 
         function mostraTabella(turni, mese, anno, statoSalvato) {
             const output = document.getElementById('output');
-            let html = <table><tr><th>Giorno</th>;
-            NOMI.forEach(n => html += <th colspan="3">${n}</th>);
-            html += </tr>;
-
+            let html = `<table><tr><th>Giorno</th>`;
+            NOMI.forEach(n => html += `<th colspan="3">${n}</th>`);
+            html += `</tr>`;
             turni.forEach(t => {
                 const data = new Date(anno, mese - 1, t.giorno);
                 const giornoSett = GIORNI_SETT[data.getDay()];
                 const isFestivo = data.getDay() === 0;
-
-                html += `<tr class="${isFestivo ? 'festivo' : ''}">
-                            <td>${t.giorno} ${giornoSett}</td>`;
-                
+                html += `<tr class="${isFestivo ? 'festivo' : ''}"><td>${t.giorno} ${giornoSett}</td>`;
                 NOMI.forEach(nome => {
-                    const idM = mattina_${t.giorno}_${nome};
-                    const idP = pomeriggio_${t.giorno}_${nome};
-                    const idN = notte_${t.giorno}_${nome};
-                    
+                    const idM = `mattina_${t.giorno}_${nome}`;
+                    const idP = `pomeriggio_${t.giorno}_${nome}`;
+                    const idN = `notte_${t.giorno}_${nome}`;
                     html += `
                         <td><select id="${idM}" onchange="updateVal('${idM}', this.value)">${getOptions('M', statoSalvato[idM])}</select></td>
                         <td><select id="${idP}" onchange="updateVal('${idP}', this.value)">${getOptions('P', statoSalvato[idP])}</select></td>
@@ -147,16 +132,16 @@
                     currentSelections[idP] = statoSalvato[idP] || "";
                     currentSelections[idN] = statoSalvato[idN] || "";
                 });
-                html += </tr>;
+                html += `</tr>`;
             });
-            html += </table>;
+            html += `</table>`;
             output.innerHTML = html;
             aggiornaLegenda();
         }
 
         function getOptions(fascia, prefill = "") {
             const basi = ["", "F", "RC", "VA", "PRO", "REP", "1", "2"];
-            return basi.map(opt => <option value="${opt}" ${opt === prefill ? 'selected' : ''}>${opt}</option>).join('');
+            return basi.map(opt => `<option value="${opt}" ${opt === prefill ? 'selected' : ''}>${opt}</option>`).join('');
         }
 
         function updateVal(id, val) {
