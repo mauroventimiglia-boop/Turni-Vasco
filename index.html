@@ -753,15 +753,19 @@
         // --- Su mobile il salvataggio è solo manuale tramite pulsante ---
         clearTimeout(saveTimeout); // Cancella il timeout precedente se esiste
         if (isMobileDevice()) {
-            segnalaModificheDaSalvare();
+          segnalaModificheDaSalvare();
         } else {
-            saveTimeout = setTimeout(() => {
-                console.log("Salvataggio automatico su server...");
-                if (meseCorrente && annoCorrente && Object.keys(currentSelections).length > 0) {
-                    google.script.run.salvaStatoTurni(Number(annoCorrente), Number(meseCorrente), currentSelections);
-                }
-            }, isLandscapeCompatta() ? 3200 : (isPortraitMobile() ? 2600 : 2000));
-            salvaStatoInLocalStorageDebounced();
+          saveTimeout = setTimeout(() => {
+            console.log("Salvataggio automatico su server...");
+            if (meseCorrente && annoCorrente && Object.keys(currentSelections).length > 0) {
+              fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ anno: Number(annoCorrente), mese: Number(meseCorrente), stato: currentSelections })
+              });
+            }
+          }, isLandscapeCompatta() ? 3200 : (isPortraitMobile() ? 2600 : 2000));
+          salvaStatoInLocalStorageDebounced();
         }
 
         aggiornaLegendaDebounced();
@@ -1254,7 +1258,13 @@
                 document.getElementById('progetto-anno').value = anno;
                 document.getElementById('progetto-feedback').style.display = 'none';
                 // Recupera dati già inseriti per quel giorno/operatore/mese/anno (array di procedure)
-                google.script.run.withSuccessHandler(function(dati) {
+                fetch(APPSCRIPT_URL + '?action=getDatiProgetto', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ giorno, operatore, mese, anno })
+                })
+                .then(r => r.json())
+                .then(dati => {
                   if (dati && typeof dati === 'object' && (dati.oraInizioGlobale || dati.oraFineGlobale || (Array.isArray(dati.procedure) && dati.procedure.length))) {
                     renderProceduraProgetto(dati);
                     setTimeout(() => { popup.style.display = 'flex'; }, 0);
@@ -1262,7 +1272,7 @@
                     renderProceduraProgetto({ oraInizioGlobale: '', oraFineGlobale: '', procedure: [] });
                     setTimeout(() => { popup.style.display = 'flex'; }, 0);
                   }
-                }).getDatiProgetto({giorno, operatore, mese, anno});
+                });
               }
 
               window.aggiungiProceduraProgetto = function() {
@@ -1379,16 +1389,22 @@
                   cartella: div.querySelector('.progetto-cartella').value
                 })).filter(p => p.tipoProcedura || p.paziente || p.cartella);
                 // Salva oggetto con orario globale e array di procedure
-                google.script.run.withSuccessHandler(() => {
+                fetch(APPSCRIPT_URL + '?action=salvaDatiProgetto', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure})
+                })
+                .then(() => {
                   document.getElementById('progetto-feedback').style.display = 'block';
                   document.getElementById('progetto-feedback').style.color = '#176d1a';
                   document.getElementById('progetto-feedback').textContent = 'Dati progetto salvati!';
                   setTimeout(window.chiudiFormProgetto, 800); // chiudi dopo breve attesa
-                }).withFailureHandler(() => {
+                })
+                .catch(() => {
                   document.getElementById('progetto-feedback').style.display = 'block';
                   document.getElementById('progetto-feedback').style.color = '#dc3545';
                   document.getElementById('progetto-feedback').textContent = 'Errore salvataggio!';
-                }).salvaDatiProgetto({giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure});
+                });
               }
           previewHtml += '</table></div>';
 
@@ -1424,7 +1440,13 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
       container.innerHTML = `<span style='color:#dc3545;font-weight:bold;'>Nessun dato ricevuto dal server.<br>Verifica la connessione o contatta l'amministratore.</span>`;
     }
   }, 5000);
-  google.script.run.withSuccessHandler(function(dati) {
+  fetch(APPSCRIPT_URL + '?action=getTabellaProgettoMese', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mese: Number(mese), anno: Number(anno) })
+  })
+  .then(r => r.json())
+  .then(dati => {
     // Mostra sempre il risultato grezzo per debug
     if (!Array.isArray(dati) || dati.length === 0) {
       container.innerHTML = `<p style='text-align:center;color:#b80000;font-weight:bold;'>Nessun progetto trovato per il mese selezionato.</p>`;
@@ -1439,53 +1461,15 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
     </div>`;
     html += `<div style='overflow-x:auto;'><table id="tabella-progetto-stampabile" style='margin:0 auto 1.5em auto;font-size:1.05em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;'>`;
     html += `<caption style='caption-side:top;padding:12px 0 8px 0;font-size:1.18em;font-weight:bold;color:#1a2a3a;background:#eaf2fa;border-radius:10px 10px 0 0;'>PROGETTI VASCOLARI MESE APRILE 26</caption>`;
-    html += `<tr style='background:#eaf2fa;color:#1a2a3a;'>
-      <th style='padding:10px 0;min-width:120px;font-weight:bold;background:#f7fafc;'>TSRM</th>
-      <th style='min-width:110px;font-weight:bold;background:#f7fafc;'>Data</th>
-      <th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Giorno</th>
-      <th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Entrata</th>
-      <th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Uscita</th>
-      <th style='min-width:80px;font-weight:bold;background:#f7fafc;'>Totale Ore</th>
+    html += `<tr style='background:#eaf2fa;color:#1a2a3a;'>`
+      +`<th style='padding:10px 0;min-width:120px;font-weight:bold;background:#f7fafc;'>TSRM</th>`
+      +`<th style='min-width:110px;font-weight:bold;background:#f7fafc;'>Data</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Giorno</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Entrata</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Uscita</th>`
+      +`<th style='min-width:80px;font-weight:bold;background:#f7fafc;'>Totale Ore</th>`
     </tr>`;
-    // Funzione per chiudere la tabella progetto
-    window.chiudiTabellaProgetto = function chiudiTabellaProgetto() {
-      let container = document.getElementById('reperibilita-container');
-      if (!container) container = document.getElementById('preview-container');
-      if (container) container.innerHTML = '';
-    }
-
-    // Esporta la tabella progetto in PDF
-    window.esportaProgettoPDF = function esportaProgettoPDF() {
-      const tabella = document.getElementById('tabella-progetto-stampabile');
-      if (!tabella) return alert('Tabella non trovata!');
-      let win = window.open('', '', 'width=900,height=700');
-      win.document.write('<html><head><title>Progetto PDF</title>');
-      win.document.write('<style>table{border-collapse:collapse;width:100%;font-size:1.05em;background:#fff;}caption{caption-side:top;padding:12px 0 8px 0;font-size:1.18em;font-weight:bold;color:#1a2a3a;background:#eaf2fa;border-radius:10px 10px 0 0;}th,td{border:1px solid #b0b0b0;padding:6px;text-align:center;color:#1a2a3a;}th{background:#eaf2fa;color:#1a2a3a;font-weight:bold;}</style>');
-      win.document.write('</head><body>');
-      // Inserisco la caption se non presente
-      let tabellaHtml = tabella.outerHTML;
-      if (!/\<caption/i.test(tabellaHtml)) {
-        tabellaHtml = tabellaHtml.replace('<table', "<table><caption style='caption-side:top;padding:12px 0 8px 0;font-size:1.18em;font-weight:bold;color:#1a2a3a;background:#eaf2fa;border-radius:10px 10px 0 0;'>PROGETTI VASCOLARI MESE APRILE 26</caption>");
-      }
-      win.document.write(tabellaHtml);
-      win.document.write('</body></html>');
-      win.document.close();
-      win.print();
-    }
-
-    // Esporta la tabella progetto in Excel
-    window.esportaProgettoExcel = function esportaProgettoExcel() {
-      const tabella = document.getElementById('tabella-progetto-stampabile');
-      if (!tabella) return alert('Tabella non trovata!');
-      let html = tabella.outerHTML.replace(/<tfoot[\s\S]*?<\/tfoot>/gi, '');
-      let uri = 'data:application/vnd.ms-excel;base64,' + window.btoa(unescape(encodeURIComponent(html)));
-      let link = document.createElement('a');
-      link.href = uri;
-      link.download = 'progetto.xls';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    // ...existing code...
     dati.forEach(row => {
       const isFestivo = row.isFestivo;
       const coloreData = isFestivo ? '#b80000' : '#111';
@@ -1521,10 +1505,11 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
     });
     html += `</table></div>`;
     container.innerHTML = html;
-  }).withFailureHandler(function(err){
+  })
+  .catch(err => {
     let msg = (err && err.message) ? err.message : '';
     container.innerHTML = `<span style='color:#dc3545;font-weight:bold;'>Errore nel caricamento dei dati progetto!<br>${msg}</span><br><span style='color:#888;'>Controlla i log Apps Script per dettagli.</span>`;
-  }).getTabellaProgettoMese(Number(mese), Number(anno));
+  });
 };
 
           document.getElementById('archivio-preview').innerHTML = previewHtml;
