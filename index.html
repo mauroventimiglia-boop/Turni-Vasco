@@ -61,6 +61,7 @@
         const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
         let currentSelections = {};
 
+
         async function caricaTurni() {
             const m = document.getElementById('mese').value;
             const a = document.getElementById('anno').value;
@@ -68,48 +69,50 @@
             out.innerHTML = "Caricamento...";
 
             try {
-                const r = await fetch(${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a});
+                const r = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a}`);
                 const j = await r.json();
                 const stato = j.ok ? j.stato : {};
-                
+
                 // Generiamo i giorni (30 o 31)
                 const giorniInMese = new Date(a, m, 0).getDate();
-                let html = <table><tr><th class="col-giorno">Giorno</th>;
-                NOMI.forEach(n => html += <th>${n.substring(0,4)}</th>);
-                html += </tr>;
+                let html = `<table><tr><th class="col-giorno">Giorno</th>`;
+                NOMI.forEach(n => html += `<th>${n.substring(0,4)}</th>`);
+                html += `</tr>`;
 
                 for(let g=1; g<=giorniInMese; g++) {
                     const data = new Date(a, m-1, g);
-                    const isF = data.getDay() === 0; 
+                    const isF = data.getDay() === 0;
                     const labelG = g + " " + ["D","L","M","M","G","V","S"][data.getDay()];
-                    
-                    html += <tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>;
-                    
+
+                    html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
+
                     NOMI.forEach(n => {
-                        html += <td><div class="turno-container">;
+                        html += `<td><div class="turno-container">`;
                         // Creiamo 3 select per cella: Mattina, Pomeriggio, Notte
                         ['m','p','n'].forEach(f => {
-                            const id = ${f}_${g}_${n};
+                            const id = `${f}_${g}_${n}`;
                             const val = stato[id] || "";
                             html += `<select id="${id}" class="sel-${val}" onchange="updateStyle(this)">
                                         ${getOptions(val)}
                                      </select>`;
                         });
-                        html += </div></td>;
+                        html += `</div></td>`;
                     });
-                    html += </tr>;
+                    html += `</tr>`;
                 }
-                out.innerHTML = html + </table>;
+                out.innerHTML = html + `</table>`;
             } catch(e) { out.innerHTML = "Errore connessione!"; }
         }
 
+
         function getOptions(selected) {
             const opt = ["", "1", "2", "VA", "PRO", "REP", "F", "RC"];
-            return opt.map(o => <option value="${o}" ${o===selected?'selected':''}>${o||'-'}</option>).join('');
+            return opt.map(o => `<option value="${o}" ${o===selected?'selected':''}>${o||'-'}</option>`).join('');
         }
 
+
         function updateStyle(s) {
-            s.className = sel-${s.value};
+            s.className = `sel-${s.value}`;
             currentSelections[s.id] = s.value;
         }
 
