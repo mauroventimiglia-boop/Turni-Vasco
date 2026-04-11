@@ -1,183 +1,183 @@
 <!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Turni Tsrm</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Turni Tsrm">
-  <meta name="application-name" content="Turni Tsrm">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="theme-color" content="#2a4d7a">
-  <link rel="stylesheet" href="custom-styles.css">
-  <script>
-    // Inserire qui l'URL del backend Apps Script
-    const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzXGsfLWICNaQQRxXe11x-oYJPrr2Ok_jthCoHv0TEu_Xl6duVWpwmpSRVbe73MH5H7w/exec";
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Turni Pro</title>
+  <style>
+    :root {
+      --bg-va: #b3d1ff; --text-va: #0a2377;
+      --bg-pro: #b6ffd0; --text-pro: #006b2e;
+      --bg-rep: #ffd6d6; --text-rep: #b80000;
+      --bg-f: #e2e3e5; --text-f: #444;
+      --bg-rr: #e040fb; --text-rr: #ffffff;
+    }
+    body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f7f6; font-size: 13px; }
+    .header-controls { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        
+    table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+    th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+    th { background: #f8f9fa; font-size: 11px; }
+    .col-giorno { width: 40px; }
+
+    .turno-container { display: flex; flex-direction: column; gap: 2px; }
+    select { width: 100%; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; height: 24px; text-align-last: center; }
+
+    /* Classi Colori */
+    .sel-VA { background: var(--bg-va); color: var(--text-va); font-weight: bold; }
+    .sel-PRO { background: var(--bg-pro); color: var(--text-pro); font-weight: bold; }
+    .sel-REP { background: var(--bg-rep); color: var(--text-rep); font-weight: bold; }
+    .sel-F, .sel-RC { background: var(--bg-f); color: var(--text-f); }
+    .sel-RR { background: var(--bg-rr); color: var(--text-rr); }
+
+    .festivo { background: #ffebee; }
+    .festivo td:first-child { color: red; font-weight: bold; }
+
+    .btn-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+    button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; font-size: 12px; }
+    .btn-blue { background: #007bff; color: white; }
+    .btn-green { background: #28a745; color: white; }
+    .btn-orange { background: #fd7e14; color: white; }
+        
+    #legenda-operatori { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .card-legenda { background: white; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+    .card-legenda h4 { margin: 0 0 5px 0; border-bottom: 1px solid #eee; }
+    .stat-item { font-size: 11px; color: #555; }
+  </style>
 </head>
 <body>
-  <!-- Loader visivo -->
-  <div id="loader-overlay" class="loader-overlay">
-    <div class="loader-content">
-      <div class="spinner"></div>
-      <span class="loader-text">Caricamento turni...</span>
+
+  <div class="header-controls">
+    <strong>Mese:</strong> <input type="number" id="mese" style="width:40px">
+    <strong>Anno:</strong> <input type="number" id="anno" style="width:60px">
+    <div class="btn-group">
+      <button class="btn-blue" onclick="caricaTurni()">Carica</button>
+      <button class="btn-green" onclick="salvaTurniManuale()">Salva 💾</button>
+      <button class="btn-orange" onclick="generaAnteprimaBackup()">Backup/Anteprima</button>
     </div>
-  </div>
-  <h2>Gestione Turni</h2>
-  <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
-  <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
-  <button id="carica-turni-btn">Carica Turni</button>
-  <button id="pulisci-tabella-btn" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
-  <button id="salva-turni-manuale-btn" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
-  <span id="salva-turni-feedback" style="display:none;font-size:0.82em;font-weight:600;margin-left:6px;"></span>
-  
-  <!-- Popup di conferma personalizzato -->
-  <div id="custom-confirm-popup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:4000;align-items:center;justify-content:center;">
-    <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:400px;width:90vw;box-shadow:0 2px 16px #0003;text-align:center;">
-      <p id="custom-confirm-msg" style="font-size:1.1em;color:#333;margin:0 0 1.5em 0;">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
-      <div style="display:flex;gap:16px;justify-content:center;">
-        <button id="custom-confirm-ok" class="save-btn" style="background-color:#dc3545;">Conferma</button>
-        <button id="custom-confirm-cancel" class="save-btn" style="background-color:#6c757d;">Annulla</button>
-      </div>
-    </div>
+    <span id="feedback"></span>
   </div>
 
-  <div class="main-container">
-    <div id="output" class="table-container"></div>
-    <div class="legend-container">
-            <!-- Popup input anno statistiche REPE -->
-            <div id="popup-inserisci-anno-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:3000;align-items:center;justify-content:center;">
-              <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:340px;width:96vw;box-shadow:0 2px 16px #0002;position:relative;display:flex;flex-direction:column;align-items:center;">
-                <h3 style="color:#b80000;text-align:center;margin-top:0;margin-bottom:1em;font-size:1.15em;">Inserisci l'anno per le statistiche REPE</h3>
-                <input id="input-anno-repe" type="number" min="2020" max="2100" value="" placeholder="es: 2026" style="font-size:1.1em;padding:7px 12px;border-radius:6px;border:1px solid #bbb;width:120px;text-align:center;outline:none;">
-                <div style="margin-top:1.5em;display:flex;gap:16px;justify-content:center;width:100%;">
-                  <button id="conferma-anno-repe-btn" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
-                  <button id="chiudi-popup-anno-repe-btn" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
-                </div>
-                <span id="errore-anno-repe" style="display:none;color:#b80000;font-weight:bold;margin-top:1em;font-size:1em;"></span>
-              </div>
-            </div>
-      <div id="legenda-header-row" style="position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;">
-        <h4 style="margin:0;color:#2a4d7a;text-align:center;width:100%;">Legenda Riepilogo</h4>
-        <button id="btn-aggiorna-legenda-mobile" type="button" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
-      </div>
-      <div id="legenda-feedback" style="display:none;text-align:center;font-size:0.85em;color:#b26a00;font-weight:600;margin:6px 0 0 0;">Legenda da aggiornare</div>
-      <div id="legenda-operatori"></div>
-      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;">Statistiche REPE annuali</button>
-      <div id="popup-statistiche-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;align-items:center;justify-content:center;">
-        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:480px;width:98vw;box-shadow:0 2px 16px #0002;position:relative;">
-          <h3 style="color:#b80000;text-align:center;margin-top:0;">Statistiche REPE annuali</h3>
-          <div id="contenuto-statistiche-repe"></div>
-          <div style="text-align:right;margin-top:1.5em;">
-            <button id="chiudi-statistiche-repe-btn" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="output"></div>
+  <div id="legenda-operatori"></div>
   <div id="preview-container"></div>
-  <div id="progetto-backup-container" style="margin-top:2em;"></div>
-  <button id="genera-anteprima-backup-btn" class="save-btn">Genera Anteprima Backup</button>
-  <button id="conferma-salvataggio-btn" class="save-btn" style="display: none; background-color: #28a745;">Conferma e Salva</button>
-  <button id="chiudi-anteprima-btn" class="save-btn" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
-  <button id="toggle-archivio-btn" class="save-btn" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
+
   <script>
-  // Binding eventi pulsanti principali dopo il caricamento del DOM
-  window.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('carica-turni-btn')?.addEventListener('click', window.caricaTurni);
-    document.getElementById('pulisci-tabella-btn')?.addEventListener('click', window.pulisciTabella);
-    document.getElementById('salva-turni-manuale-btn')?.addEventListener('click', window.salvaTurniManuale);
-    document.getElementById('conferma-anno-repe-btn')?.addEventListener('click', window.confermaAnnoRepe ?? confermaAnnoRepe);
-    document.getElementById('chiudi-popup-anno-repe-btn')?.addEventListener('click', window.chiudiPopupAnnoRepe ?? chiudiPopupAnnoRepe);
-    document.getElementById('btn-aggiorna-legenda-mobile')?.addEventListener('click', window.aggiornaLegendaManuale ?? aggiornaLegendaManuale);
-    document.getElementById('btn-statistiche-repe')?.addEventListener('click', window.mostraStatisticheRepe ?? mostraStatisticheRepe);
-    document.getElementById('chiudi-statistiche-repe-btn')?.addEventListener('click', window.chiudiStatisticheRepe ?? chiudiStatisticheRepe);
-    document.getElementById('genera-anteprima-backup-btn')?.addEventListener('click', window.generaAnteprimaBackup ?? generaAnteprimaBackup);
-    document.getElementById('conferma-salvataggio-btn')?.addEventListener('click', window.confermaSalvataggioBackup ?? confermaSalvataggioBackup);
-    document.getElementById('chiudi-anteprima-btn')?.addEventListener('click', window.chiudiAnteprima ?? chiudiAnteprima);
-    document.getElementById('toggle-archivio-btn')?.addEventListener('click', window.toggleArchivio ?? toggleArchivio);
-  });
+    const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzXGsfLWICNaQQRxXe11x-oYJPrr2Ok_jthCoHv0TEu_Xl6duVWpwmpSRVbe73MH5H7w/exec"; 
+    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+    let currentSelections = {};
+    let currentTurniData = [];
+
+    async function caricaTurni() {
+      const m = document.getElementById('mese').value;
+      const a = document.getElementById('anno').value;
+      document.getElementById('output').innerHTML = "Caricamento...";
+            
+      try {
+        const r = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a}`);
+        const j = await r.json();
+        const stato = j.ok ? j.stato : {};
+        currentSelections = stato;
+
+        const r2 = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${m}&anno=${a}`);
+        const j2 = await r2.json();
+        currentTurniData = j2.data || [];
+                
+        mostraTabella(currentTurniData, m, a, stato);
+      } catch(e) { document.getElementById('output').innerHTML = "Errore di connessione!"; }
+    }
+
+    function mostraTabella(turni, mese, anno, stato) {
+      let html = `<table><tr><th class="col-giorno">Giorno</th>`;
+      NOMI.forEach(n => html += `<th>${n.substring(0,4)}</th>`);
+      html += `</tr>`;
+
+      turni.forEach(t => {
+        const data = new Date(anno, mese - 1, t.giorno);
+        const isF = data.getDay() === 0;
+        const labelG = t.giorno + " " + ["D","L","M","M","G","V","S"][data.getDay()];
+                
+        html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
+        NOMI.forEach(nome => {
+          html += `<td><div class="turno-container">`;
+          const fasce = isF ? ['festivo'] : ['m', 'p', 'n'];
+          fasce.forEach(f => {
+            const id = `${f}_${t.giorno}_${nome}`;
+            const val = stato[id] || "";
+            html += `<select id="${id}" class="sel-${val}" onchange="updateVal(this)">${getOptions(val)}</select>`;
+          });
+          html += `</div></td>`;
+        });
+        html += `</tr>`;
+      });
+      document.getElementById('output').innerHTML = html + `</table>`;
+      aggiornaLegenda();
+    }
+
+    function getOptions(val) {
+      const opts = ["", "1", "2", "VA", "PRO", "REP", "F", "RC", "RR"];
+      return opts.map(o => `<option value="${o}" ${o===val?'selected':''}>${o||'-'}</option>`).join('');
+    }
+
+    function updateVal(s) {
+      s.className = `sel-${s.value}`;
+      currentSelections[s.id] = s.value;
+      aggiornaLegenda();
+    }
+
+    function aggiornaLegenda() {
+      let html = "";
+      NOMI.forEach(n => {
+        const count = (val) => Object.entries(currentSelections).filter(([id, v]) => id.endsWith(n) && v === val).length;
+        html += `<div class="card-legenda">
+          <h4>${n}</h4>
+          <div class="stat-item">VA: ${count('VA')} | PRO: ${count('PRO')}</div>
+          <div class="stat-item">REP: ${count('REP')} | RR: ${count('RR')}</div>
+          <div class="stat-item">F/RC: ${count('F') + count('RC')}</div>
+        </div>`;
+      });
+      document.getElementById('legenda-operatori').innerHTML = html;
+    }
+
+    async function salvaTurniManuale() {
+      const fb = document.getElementById('feedback');
+      fb.textContent = "Salvataggio...";
+      try {
+        await fetch(APPSCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            action: "salvaStatoTurni",
+            mese: document.getElementById('mese').value,
+            anno: document.getElementById('anno').value,
+            stato: currentSelections
+          })
+        });
+        fb.textContent = " ✓ Salvato";
+      } catch(e) { fb.textContent = " Errore!"; }
+    }
+
+    // Funzione per Generare Anteprima/Backup (Semplificata)
+    function generaAnteprimaBackup() {
+      const out = document.getElementById('preview-container');
+      out.innerHTML = "<h3>Anteprima Backup Generata</h3><p>I dati sono pronti per essere inviati al foglio Archivio.</p><button class='btn-green' onclick='confermaSalvataggioBackup()'>Invia ad Archivio</button>";
+    }
+
+    async function confermaSalvataggioBackup() {
+      alert("Funzione di invio archivio chiamata correttamente.");
+      // Qui andrebbe la chiamata fetch specifica per action=salvaTabellaSemplificata
+    }
+
+    // Inizializzazione data odierna
+    window.onload = () => {
+      const d = new Date();
+      document.getElementById('mese').value = d.getMonth() + 1;
+      document.getElementById('anno').value = d.getFullYear();
+    };
   </script>
-  <div id="feedback-message"></div>
-  <div id="archivio-container" style="display: none;">
-    <h4>Archivio Turni Salvati</h4>
-    <label>Mese: 
-      <select id="archivio-filtro-mese">
-        <option value="">--</option>
-        <option value="1">Gennaio</option>
-        <option value="2">Febbraio</option>
-        <option value="3">Marzo</option>
-        <option value="4">Aprile</option>
-        <option value="5">Maggio</option>
-        <option value="6">Giugno</option>
-        <option value="7">Luglio</option>
-        <option value="8">Agosto</option>
-        <option value="9">Settembre</option>
-        <option value="10">Ottobre</option>
-        <option value="11">Novembre</option>
-        <option value="12">Dicembre</option>
-      </select>
-    </label>
-    <label>Anno: <input type="number" id="archivio-filtro-anno" min="2020" max="2100" style="width:80px;"></label>
-    <button onclick="cercaArchivio()">Cerca</button>
-    <div id="reperibilita-container" style="margin-top: 1.5em;"></div>
-    <div id="archivio-preview"></div>
-  </div>
-  <!-- Qui va incluso tutto lo script JS aggiornato -->
-  <script>
-        // --- STATISTICHE REPE ANNUALI ---
-        function mostraStatisticheRepe() {
-          document.getElementById('input-anno-repe').value = new Date().getFullYear();
-          document.getElementById('errore-anno-repe').style.display = 'none';
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'flex';
-          setTimeout(() => { document.getElementById('input-anno-repe').focus(); }, 100);
-        }
-
-        function chiudiPopupAnnoRepe() {
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
-        }
-
-        function confermaAnnoRepe() {
-          const anno = Number(document.getElementById('input-anno-repe').value);
-          const errore = document.getElementById('errore-anno-repe');
-          if (!anno || isNaN(anno) || anno < 2020 || anno > 2100) {
-            errore.textContent = "Anno non valido!";
-            errore.style.display = 'block';
-            return;
-          }
-          errore.style.display = 'none';
-          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
-          mostraLoader(true);
-          fetch(APPSCRIPT_URL + '?action=getArchivioAnno&anno=' + encodeURIComponent(anno))
-            .then(r => r.json())
-            .then(archivio => {
-              mostraLoader(false);
-              if (!archivio || !Array.isArray(archivio) || archivio.length === 0) {
-                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Nessun dato trovato per l\'anno selezionato.</span>';
-                document.getElementById('popup-statistiche-repe').style.display = 'flex';
-                return;
-              }
-              // archivio: array di oggetti {mese, anno, tabella: [ [header], [row1], ... ]}
-              const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-              const ABBREV_MAP = { 'MACA': 'MACALUSO', 'DINO': 'DINOLFO', 'NAPO': 'NAPOLI', 'VENTI': 'VENTIMIGLIA', 'VENT': 'VENTIMIGLIA' };
-              const stats = {};
-              NOMI.forEach(n => stats[n] = {
-                REP:0,
-                'REP ORE':0,
-                'REP FESTIVI':0,
-                'REP PRIMI10_LV':0,
-                'REP PRIMI10_SD':0
-              });
-              archivio.forEach(meseObj => {
-                const tabella = meseObj.tabella;
-                if (!tabella || tabella.length < 2) return;
+</body>
+</html>
                 const header = tabella[0];
                 for (let i = 1; i < tabella.length; i++) {
                   let nome = (tabella[i][0] || '').toUpperCase();
