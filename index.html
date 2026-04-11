@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Turni Tsrm</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
   <link rel="icon" type="image/png" sizes="192x192" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
   <link rel="icon" type="image/png" sizes="512x512" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
   <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -36,265 +37,1819 @@
   <button id="pulisci-tabella-btn" onclick="pulisciTabella()" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
   <button onclick="salvaTurniManuale()" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
   <span id="salva-turni-feedback" style="display:none;font-size:0.82em;font-weight:600;margin-left:6px;"></span>
-  <!-- ...continua con il resto del file moderno (già letto da index.txt.txt)... -->
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Turni Tsrm</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/9mJcD7S1/1775233609955.png">
-  <meta name="theme-color" content="#2a4d7a">
-  <link rel="stylesheet" href="custom-styles.css">
-  <script>
-    // URL del tuo backend Apps Script
-    const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbygfswYatsxqiZrZoVDDZzo20XolahNbEyaUg9Zq0wp9jxSt-0ltxyL2nzYirgnoBJ-KQ/exec";
-  </script>
-</head>
-<body>
-
-  <div id="loader-overlay" class="loader-overlay" style="display:none;">
-    <div class="loader-content">
-      <div class="spinner"></div>
-      <span class="loader-text">Caricamento...</span>
-    </div>
-  </div>
-
-  <h2>Gestione Turni</h2>
   
-  <div class="controls">
-    <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
-    <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
-    <button onclick="caricaTurni()">Carica</button>
-    <button onclick="salvaTurniManuale()" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0); color:#2e7d52;">Salva 💾</button>
-    <button onclick="pulisciTabella()" style="background-color:#dc3545; color:#fff;">Pulisci</button>
+  <!-- Popup di conferma personalizzato -->
+  <div id="custom-confirm-popup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:4000;align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:400px;width:90vw;box-shadow:0 2px 16px #0003;text-align:center;">
+      <p id="custom-confirm-msg" style="font-size:1.1em;color:#333;margin:0 0 1.5em 0;">Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
+      <div style="display:flex;gap:16px;justify-content:center;">
+        <button id="custom-confirm-ok" class="save-btn" style="background-color:#dc3545;">Conferma</button>
+        <button id="custom-confirm-cancel" class="save-btn" style="background-color:#6c757d;">Annulla</button>
+      </div>
+    </div>
   </div>
 
   <div class="main-container">
     <div id="output" class="table-container"></div>
-    
     <div class="legend-container">
-      <h4 style="text-align:center; color:#2a4d7a;">Legenda Riepilogo</h4>
+            <!-- Popup input anno statistiche REPE -->
+            <div id="popup-inserisci-anno-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:3000;align-items:center;justify-content:center;">
+              <div style="background:#fff;padding:2em 1.5em 1.5em 1.5em;border-radius:10px;max-width:340px;width:96vw;box-shadow:0 2px 16px #0002;position:relative;display:flex;flex-direction:column;align-items:center;">
+                <h3 style="color:#b80000;text-align:center;margin-top:0;margin-bottom:1em;font-size:1.15em;">Inserisci l'anno per le statistiche REPE</h3>
+                <input id="input-anno-repe" type="number" min="2020" max="2100" value="" placeholder="es: 2026" style="font-size:1.1em;padding:7px 12px;border-radius:6px;border:1px solid #bbb;width:120px;text-align:center;outline:none;">
+                <div style="margin-top:1.5em;display:flex;gap:16px;justify-content:center;width:100%;">
+                  <button onclick="confermaAnnoRepe()" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
+                  <button onclick="chiudiPopupAnnoRepe()" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
+                </div>
+                <span id="errore-anno-repe" style="display:none;color:#b80000;font-weight:bold;margin-top:1em;font-size:1em;"></span>
+              </div>
+            </div>
+      <div id="legenda-header-row" style="position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;">
+        <h4 style="margin:0;color:#2a4d7a;text-align:center;width:100%;">Legenda Riepilogo</h4>
+        <button id="btn-aggiorna-legenda-mobile" type="button" onclick="aggiornaLegendaManuale()" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
+      </div>
+      <div id="legenda-feedback" style="display:none;text-align:center;font-size:0.85em;color:#b26a00;font-weight:600;margin:6px 0 0 0;">Legenda da aggiornare</div>
       <div id="legenda-operatori"></div>
-      <button class="save-btn" style="background-color:#b80000; width:100%;" onclick="mostraStatisticheRepe()">Statistiche REPE annuali</button>
+      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;" onclick="mostraStatisticheRepe()">Statistiche REPE annuali</button>
+      <div id="popup-statistiche-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:480px;width:98vw;box-shadow:0 2px 16px #0002;position:relative;">
+          <h3 style="color:#b80000;text-align:center;margin-top:0;">Statistiche REPE annuali</h3>
+          <div id="contenuto-statistiche-repe"></div>
+          <div style="text-align:right;margin-top:1.5em;">
+            <button onclick="chiudiStatisticheRepe()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <hr>
-
-  <div class="actions-bottom">
-    <button class="save-btn" onclick="generaAnteprimaBackup()">Genera Anteprima Backup</button>
-    <button id="conferma-salvataggio-btn" class="save-btn" onclick="confermaSalvataggioBackup()" style="display: none; background-color: #28a745;">Conferma e Salva in Archivio</button>
-    <button class="save-btn" onclick="toggleArchivio()" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
-  </div>
-
   <div id="preview-container"></div>
-  <div id="archivio-container" style="display: none; margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
-    <h4>Archivio Turni</h4>
+  <div id="progetto-backup-container" style="margin-top:2em;"></div>
+  <button class="save-btn" onclick="generaAnteprimaBackup()">Genera Anteprima Backup</button>
+  <button id="conferma-salvataggio-btn" class="save-btn" onclick="confermaSalvataggioBackup()" style="display: none; background-color: #28a745;">Conferma e Salva</button>
+  <button id="chiudi-anteprima-btn" class="save-btn" onclick="chiudiAnteprima()" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
+  <button class="save-btn" onclick="toggleArchivio()" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
+  <div id="feedback-message"></div>
+  <div id="archivio-container" style="display: none;">
+    <h4>Archivio Turni Salvati</h4>
+    <label>Mese: 
+      <select id="archivio-filtro-mese">
+        <option value="">--</option>
+        <option value="1">Gennaio</option>
+        <option value="2">Febbraio</option>
+        <option value="3">Marzo</option>
+        <option value="4">Aprile</option>
+        <option value="5">Maggio</option>
+        <option value="6">Giugno</option>
+        <option value="7">Luglio</option>
+        <option value="8">Agosto</option>
+        <option value="9">Settembre</option>
+        <option value="10">Ottobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Dicembre</option>
+      </select>
+    </label>
+    <label>Anno: <input type="number" id="archivio-filtro-anno" min="2020" max="2100" style="width:80px;"></label>
+    <button onclick="cercaArchivio()">Cerca</button>
+    <div id="reperibilita-container" style="margin-top: 1.5em;"></div>
     <div id="archivio-preview"></div>
   </div>
-
-  <div id="form-progetto-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto;">
-      <h3 id="titolo-progetto">Dettagli Progetto</h3>
-      <div id="progetto-inputs">
-          <label>Ora Inizio: <input type="time" id="prog-inizio"></label>
-          <label>Ora Fine: <input type="time" id="prog-fine"></label>
-          <hr>
-          <div id="lista-pazienti"></div>
-          <button onclick="aggiungiPaziente()">+ Aggiungi Paziente</button>
-      </div>
-      <div style="margin-top:20px; text-align:right;">
-        <button onclick="chiudiFormProgetto()">Annulla</button>
-        <button onclick="salvaDatiProgetto()" style="background:#28a745; color:white;">Salva</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Qui va incluso tutto lo script JS aggiornato -->
   <script>
+        // --- STATISTICHE REPE ANNUALI ---
+        function mostraStatisticheRepe() {
+          document.getElementById('input-anno-repe').value = new Date().getFullYear();
+          document.getElementById('errore-anno-repe').style.display = 'none';
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'flex';
+          setTimeout(() => { document.getElementById('input-anno-repe').focus(); }, 100);
+        }
+
+        function chiudiPopupAnnoRepe() {
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
+        }
+
+        function confermaAnnoRepe() {
+          const anno = Number(document.getElementById('input-anno-repe').value);
+          const errore = document.getElementById('errore-anno-repe');
+          if (!anno || isNaN(anno) || anno < 2020 || anno > 2100) {
+            errore.textContent = "Anno non valido!";
+            errore.style.display = 'block';
+            return;
+          }
+          errore.style.display = 'none';
+          document.getElementById('popup-inserisci-anno-repe').style.display = 'none';
+          mostraLoader(true);
+          fetch(APPSCRIPT_URL + '?action=getArchivioAnno&anno=' + encodeURIComponent(anno))
+            .then(r => r.json())
+            .then(archivio => {
+              mostraLoader(false);
+              if (!archivio || !Array.isArray(archivio) || archivio.length === 0) {
+                document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Nessun dato trovato per l\'anno selezionato.</span>';
+                document.getElementById('popup-statistiche-repe').style.display = 'flex';
+                return;
+              }
+              // archivio: array di oggetti {mese, anno, tabella: [ [header], [row1], ... ]}
+              const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+              const ABBREV_MAP = { 'MACA': 'MACALUSO', 'DINO': 'DINOLFO', 'NAPO': 'NAPOLI', 'VENTI': 'VENTIMIGLIA', 'VENT': 'VENTIMIGLIA' };
+              const stats = {};
+              NOMI.forEach(n => stats[n] = {
+                REP:0,
+                'REP ORE':0,
+                'REP FESTIVI':0,
+                'REP PRIMI10_LV':0,
+                'REP PRIMI10_SD':0
+              });
+              archivio.forEach(meseObj => {
+                const tabella = meseObj.tabella;
+                if (!tabella || tabella.length < 2) return;
+                const header = tabella[0];
+                for (let i = 1; i < tabella.length; i++) {
+                  let nome = (tabella[i][0] || '').toUpperCase();
+                  if (ABBREV_MAP[nome]) nome = ABBREV_MAP[nome];
+                  if (!stats[nome]) continue;
+                  for (let j = 1; j < tabella[i].length; j++) {
+                    const cella = String(tabella[i][j] || '').toUpperCase();
+                    const valori = cella.split(/[\/]/).map(v => v.trim());
+                    if (valori.some(v => v === 'REP')) {
+                      const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+                      if (giornoMatch) {
+                        const giorno = parseInt(giornoMatch[1], 10);
+                        const data = new Date(meseObj.anno, meseObj.mese-1, giorno);
+                        const day = data.getDay();
+                        let ore = 12;
+                        const festivo = data && (day === 0 || isHoliday(data, getPasqua(meseObj.anno)));
+                        if (festivo) ore = 24;
+                        else if (day === 6) ore = 18;
+                        stats[nome].REP++;
+                        stats[nome]['REP ORE'] += ore;
+                        if (festivo) stats[nome]['REP FESTIVI']++;
+                        if (giorno <= 10) {
+                          if (day >= 1 && day <= 5) stats[nome]['REP PRIMI10_LV']++; // lun-ven
+                          if (day === 0 || day === 6) stats[nome]['REP PRIMI10_SD']++; // dom-sab
+                        }
+                      }
+                    }
+                  }
+                }
+              });
+              let html = `<div style="overflow-x:auto;"><table style="width:680px;min-width:600px;margin-top:1em;font-size:1.13em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;table-layout:fixed;">`;
+              html += '<tr style="background:#e0e7ef;color:#16304d;">'
+                +'<th style="padding:10px 0;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;">TSRM</th>'
+                +'<th style="min-width:90px;">Totale REPE</th>'
+                +'<th style="min-width:90px;">Totale Ore</th>'
+                +'<th style="min-width:110px;">REPE Festività</th>'
+                +'<th style="min-width:140px;">REPE Primi 10g Lun-Ven</th>'
+                +'<th style="min-width:140px;">REPE Primi 10g Sab-Dom</th>'
+              +'</tr>';
+              NOMI.forEach(nome => {
+                html += `<tr>`
+                  +`<td style='color:#333;background:#f4f8fb;text-align:center;vertical-align:middle;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;'>${nome}</td>`
+                  +`<td style='color:#b80000;text-align:center;'>${stats[nome].REP}</td>`
+                  +`<td style='color:#176d1a;text-align:center;'>${stats[nome]['REP ORE']}</td>`
+                  +`<td style='color:#b80000;text-align:center;'>${stats[nome]['REP FESTIVI']}</td>`
+                  +`<td style='color:#007bff;text-align:center;'>${stats[nome]['REP PRIMI10_LV']}</td>`
+                  +`<td style='color:#ff9800;text-align:center;'>${stats[nome]['REP PRIMI10_SD']}</td>`
+                +`</tr>`;
+              });
+              html += '</table></div>';
+              document.getElementById('contenuto-statistiche-repe').innerHTML = html;
+              document.getElementById('popup-statistiche-repe').style.display = 'flex';
+            })
+            .catch(err => {
+              mostraLoader(false);
+              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Errore nel recupero dati: '+(err && err.message ? err.message : err)+'</span>';
+              document.getElementById('popup-statistiche-repe').style.display = 'flex';
+            });
+        }
+
+        function chiudiStatisticheRepe() {
+          document.getElementById('popup-statistiche-repe').style.display = 'none';
+        }
     const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
     const GIORNI_SETT = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-    const MESI_RR = [6, 7, 8, 9];
-    let currentSelections = {};
-    let currentTurniData = [];
+    // Mesi in cui RR è abilitato (giugno, luglio, agosto, settembre)
+    const MESI_RR = [6,7,8,9];
+    let datiBackupDaSalvare = null;
 
-    window.onload = () => {
-      const d = new Date();
-      document.getElementById('mese').value = d.getMonth() + 1;
-      document.getElementById('anno').value = d.getFullYear();
-      caricaTurni();
-    };
+    // --- Performance Optimization: Global State Management ---
+    let currentSelections = {}; // Object to hold the state of all select elements {id: value}
+    let currentTurniData = [];  // Array to hold the raw data for the current month's shifts
+    let meseCorrente, annoCorrente;
 
-    async function caricaTurni() {
-      const m = document.getElementById('mese').value;
-      const a = document.getElementById('anno').value;
-      document.getElementById('loader-overlay').style.display = 'flex';
-      
-      try {
-        const rStato = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${a}&mese=${m}`);
-        currentSelections = await rStato.json() || {};
-        
-        const rTurni = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${m}&anno=${a}`);
-        currentTurniData = await rTurni.json();
-        
-        mostraTabella(currentTurniData, m, a);
-      } catch (e) {
-        console.error(e);
-        alert("Errore nel caricamento dei dati.");
-      } finally {
-        document.getElementById('loader-overlay').style.display = 'none';
+    let saveTimeout = null; // Variabile per il timeout del salvataggio automatico
+    let localStorageSaveTimeout = null;
+    let legendaUpdateTimeout = null;
+    let legendaUpdateInFrame = false;
+    let legendaDirty = false;
+    let legendaFeedbackTimeout = null;
+    let orientationStabilizeTimeout = null;
+    let selectTransitionResumeTimeout = null;
+    let viewportChangeTimeout = null;
+    let ultimaOrientazione = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+
+    function isLandscapeCompatta() {
+      return window.matchMedia('(orientation: landscape)').matches && window.innerHeight <= 500;
+    }
+
+    function isPortraitMobile() {
+      const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+      const isNarrow = window.innerWidth <= 1200;
+      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+      return isPortrait && isNarrow && isTouch;
+    }
+
+    function isMobileDevice() {
+      const userAgent = (navigator.userAgent || '').toLowerCase();
+      const isMobileUA = /android|iphone|ipad|ipod|mobile/.test(userAgent);
+      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+      return isMobileUA || (isTouch && window.innerWidth <= 1024);
+    }
+
+    function aggiornaControlliLegendaMobile() {
+      const btn = document.getElementById('btn-aggiorna-legenda-mobile');
+      const feedback = document.getElementById('legenda-feedback');
+      if (!btn || !feedback) return;
+
+      if (isMobileDevice()) {
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.textContent = legendaDirty ? 'Aggiorna *' : 'Aggiorna';
+
+        if (legendaDirty) {
+          feedback.style.display = 'block';
+          feedback.style.color = '#b26a00';
+          feedback.textContent = 'Legenda da aggiornare';
+        }
+      } else {
+        btn.style.display = 'none';
+        feedback.style.display = 'none';
       }
     }
 
-    function mostraTabella(turni, mese, anno) {
-      const out = document.getElementById('output');
-      const pasqua = getPasqua(anno);
-      let html = `<table><tr><th>Giorno</th><th>Sett.</th>${NOMI.map(n => `<th>${n}</th>`).join('')}</tr>`;
+    function segnalaLegendaDaAggiornare() {
+      legendaDirty = true;
+      aggiornaControlliLegendaMobile();
+    }
 
-      turni.forEach(t => {
-        const data = new Date(anno, mese - 1, t.giorno);
-        const isF = data.getDay() === 0 || isHoliday(data, pasqua);
-        html += `<tr class="${isF ? 'festivo' : ''}">
-          <td><b>${t.giorno}</b></td>
-          <td>${GIORNI_SETT[data.getDay()].substring(0,3)}</td>`;
-        
-        NOMI.forEach(nome => {
-          html += `<td>`;
-          if (isF) {
-            html += creaSelect(`festivo_${t.giorno}_${nome}`, ['REP']);
-          } else {
-            html += `<div class="cell-grid">
-              <span>M</span>${creaSelect(`mattina_${t.giorno}_${nome}`, ['1','VA'])}
-              <span>P</span>${creaSelect(`pomeriggio_${t.giorno}_${nome}`, ['2','PRO','VA'])}
-              <span>N</span>${creaSelect(`notte_${t.giorno}_${nome}`, ['REP'])}
-            </div>`;
-          }
-          html += `</td>`;
-        });
-        html += `</tr>`;
-      });
-      out.innerHTML = html + `</table>`;
+    function segnalaModificheDaSalvare() {
+      if (!isMobileDevice()) return;
+      const feedback = document.getElementById('salva-turni-feedback');
+      if (!feedback) return;
+      feedback.style.display = 'inline';
+      feedback.style.color = '#b26a00';
+      feedback.textContent = 'Modifiche da salvare';
+    }
+
+    function aggiornaLegendaManuale() {
       aggiornaLegenda();
+      const feedback = document.getElementById('legenda-feedback');
+      if (feedback && isMobileDevice()) {
+        clearTimeout(legendaFeedbackTimeout);
+        feedback.style.display = 'block';
+        feedback.style.color = '#176d1a';
+        feedback.textContent = '✓ Legenda aggiornata';
+        legendaFeedbackTimeout = setTimeout(() => {
+          if (!legendaDirty) feedback.style.display = 'none';
+        }, 1800);
+      }
     }
 
-    function creaSelect(id, opzioni) {
-        let opts = ['', 'F', 'RC'];
-        if (MESI_RR.includes(Number(document.getElementById('mese').value))) opts.push('RR');
-        opts = [...opts, ...opzioni];
-        const val = currentSelections[id] || "";
-        
-        let s = `<select id="${id}" onchange="cambioTurno(this)" class="sel-${val}">`;
-        [...new Set(opts)].forEach(o => {
-            s += `<option value="${o}" ${o === val ? 'selected' : ''}>${o || '-'}</option>`;
+    function abbreviaGiorno(nomeGiorno) {
+      const base = (nomeGiorno || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      if (base.startsWith('domen')) return 'Dom';
+      if (base.startsWith('lun')) return 'Lun';
+      if (base.startsWith('mar')) return 'Mar';
+      if (base.startsWith('merc')) return 'Mer';
+      if (base.startsWith('gio')) return 'Gio';
+      if (base.startsWith('ven')) return 'Ven';
+      if (base.startsWith('sab')) return 'Sab';
+      return (nomeGiorno || '').slice(0, 3);
+    }
+
+    function aggiornaEtichetteSettimanaResponsive() {
+      const abbreviate = isPortraitMobile();
+      document.querySelectorAll('#output td.giorno-sett').forEach(cell => {
+        const fullDay = cell.dataset.fullDay || cell.textContent.trim();
+        if (!cell.dataset.fullDay) cell.dataset.fullDay = fullDay;
+        cell.textContent = abbreviate ? abbreviaGiorno(fullDay) : fullDay;
+      });
+    }
+
+    function gestisciViewportChange() {
+      gestisciStabilizzazioneOrientamento();
+      aggiornaControlliLegendaMobile();
+      aggiornaEtichetteSettimanaResponsive();
+    }
+
+    function gestisciCambioViewportDebounced() {
+      const orientazioneCorrente = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+      if (orientazioneCorrente === ultimaOrientazione && !isMobileDevice()) return;
+      ultimaOrientazione = orientazioneCorrente;
+      clearTimeout(viewportChangeTimeout);
+      viewportChangeTimeout = setTimeout(() => {
+        requestAnimationFrame(() => {
+          aggiornaEtichetteSettimanaResponsive();
+          aggiornaControlliLegendaMobile();
+          gestisciStabilizzazioneOrientamento();
         });
-        return s + `</select>`;
+      }, isMobileDevice() ? 90 : 220);
     }
 
-    function cambioTurno(s) {
-        currentSelections[s.id] = s.value;
-        s.className = `sel-${s.value}`;
-        
-        // Automazione Ferie/RC
-        if (s.value === 'F' || s.value === 'RC') {
-            const parts = s.id.split('_');
-            if(parts[0] !== 'festivo') {
-                ['mattina','pomeriggio','notte'].forEach(f => {
-                    const el = document.getElementById(`${f}_${parts[1]}_${parts[2]}`);
-                    if(el) { el.value = s.value; el.className = `sel-${s.value}`; currentSelections[el.id] = s.value; }
-                });
-            }
-        }
-        
-        // Se è PRO, apri popup (opzionale o al click)
-        if(s.value === 'PRO') {
-            apriFormProgetto(s.id);
-        }
-        
-        aggiornaLegenda();
+    function sospendiTransizioniSelect(ms) {
+      document.documentElement.style.setProperty('--select-transition', 'none');
+      clearTimeout(selectTransitionResumeTimeout);
+      selectTransitionResumeTimeout = setTimeout(() => {
+        document.documentElement.style.setProperty('--select-transition', 'background-color 0.3s, color 0.3s');
+      }, ms);
     }
 
-    function aggiornaLegenda() {
-        let html = "";
-        NOMI.forEach(nome => {
-            const c = { VA:0, PRO:0, REP:0, RR:0, F:0, RC:0 };
-            Object.entries(currentSelections).forEach(([id, val]) => {
-                if(id.endsWith(nome) && val) {
-                    if(c.hasOwnProperty(val)) c[val]++;
-                }
-            });
-            html += `<div class="legend-operator">
-                <strong>${nome}</strong><br>
-                VA:${c.VA} | PRO:${c.PRO} | REP:${c.REP} | RR:${c.RR} | F/RC:${c.F + c.RC}
-            </div>`;
+    function gestisciStabilizzazioneOrientamento() {
+      if (isMobileDevice()) {
+        sospendiTransizioniSelect(180);
+        clearTimeout(orientationStabilizeTimeout);
+        orientationStabilizeTimeout = setTimeout(() => {
+          aggiornaControlliLegendaMobile();
+        }, 120);
+        return;
+      }
+
+      if (!isLandscapeCompatta()) {
+        aggiornaControlliLegendaMobile();
+        return;
+      }
+      // Durante rotazione e assestamento viewport riduce lavoro grafico percepito
+      sospendiTransizioniSelect(500);
+      clearTimeout(orientationStabilizeTimeout);
+      orientationStabilizeTimeout = setTimeout(() => {
+        aggiornaLegendaDebounced();
+      }, 400);
+    }
+
+    function aggiornaLegendaDebounced(force) {
+      if (isMobileDevice() && !force) {
+        segnalaLegendaDaAggiornare();
+        return;
+      }
+      clearTimeout(legendaUpdateTimeout);
+      const delay = isLandscapeCompatta() ? 360 : (isPortraitMobile() ? 260 : 120);
+      legendaUpdateTimeout = setTimeout(() => {
+        if (legendaUpdateInFrame) return;
+        legendaUpdateInFrame = true;
+        requestAnimationFrame(() => {
+          aggiornaLegenda();
+          legendaUpdateInFrame = false;
         });
-        document.getElementById('legenda-operatori').innerHTML = html;
+      }, delay);
     }
 
-    async function salvaTurniManuale() {
-        const m = document.getElementById('mese').value;
-        const a = document.getElementById('anno').value;
+    function salvaStatoInLocalStorageDebounced() {
+      clearTimeout(localStorageSaveTimeout);
+      const delay = isLandscapeCompatta() ? 850 : (isPortraitMobile() ? 650 : 250);
+      localStorageSaveTimeout = setTimeout(() => {
+        salvaStatoInLocalStorage();
+      }, delay);
+    }
+    // Caricamento automatico ultimo mese/anno lavorato
+    window.addEventListener('DOMContentLoaded', () => {
+      let ultimoMese = localStorage.getItem('ultimoMese');
+      let ultimoAnno = localStorage.getItem('ultimoAnno');
+      const oggi = new Date();
+      if (!ultimoMese) ultimoMese = (oggi.getMonth() + 1);
+      if (!ultimoAnno) ultimoAnno = oggi.getFullYear();
+      document.getElementById('mese').value = ultimoMese;
+      document.getElementById('anno').value = ultimoAnno;
+      aggiornaControlliLegendaMobile();
+      window.addEventListener('orientationchange', gestisciCambioViewportDebounced, { passive: true });
+      window.addEventListener('resize', gestisciCambioViewportDebounced, { passive: true });
+      caricaTurni();
+    });
+
+    function mostraLoader(show) {
+      const loader = document.getElementById('loader-overlay');
+      if (loader) loader.style.display = show ? 'flex' : 'none';
+    }
+
+    // --- Logica di Caricamento Ottimizzata ---
+    function caricaTurni() {
+      const mese = document.getElementById('mese').value;
+      const anno = document.getElementById('anno').value;
+
+      if (meseCorrente && annoCorrente && String(meseCorrente) === String(mese) && String(annoCorrente) === String(anno)) {
+        // Se già caricati, non fare nulla (evita re-render e reflow inutili)
+        return;
+      }
+
+      localStorage.setItem('ultimoMese', mese);
+      localStorage.setItem('ultimoAnno', anno);
+      meseCorrente = mese;
+      annoCorrente = anno;
+
+      const cacheKey = `turni_${anno}-${mese}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
         try {
-            await fetch(APPSCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "salvaStatoTurni", anno: a, mese: m, stato: currentSelections })
+          const { turni } = JSON.parse(cachedData);
+          if (turni && turni.length > 0) {
+            console.log("Struttura tabella dalla cache, stato turni dal server...");
+            currentTurniData = turni;
+            // Carica sempre lo stato dal server (condiviso tra dispositivi)
+            mostraLoader(true);
+            fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${encodeURIComponent(anno)}&mese=${encodeURIComponent(mese)}`)
+              .then(r => r.json())
+              .then(statoSalvato => {
+                mostraTabella(turni, mese, anno, statoSalvato);
+                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
+                mostraLoader(false);
+              })
+              .catch(() => {
+                // Fallback: usa tabella senza stato
+                mostraTabella(turni, mese, anno, {});
+                mostraLoader(false);
+              });
+            return;
+          }
+        } catch (e) {
+          console.error("Cache corrotta, la rimuovo.", e);
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
+      // Se non ci sono dati validi in cache, carica dal server.
+      console.log("Cache vuota o non valida. Caricamento dal server...");
+      mostraLoader(true);
+      fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${encodeURIComponent(anno)}&mese=${encodeURIComponent(mese)}`)
+        .then(r => r.json())
+        .then(statoSalvato => {
+          fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${encodeURIComponent(mese)}&anno=${encodeURIComponent(anno)}`)
+            .then(r => r.json())
+            .then(turni => {
+              if (Array.isArray(turni) && turni.length > 0) {
+                currentTurniData = turni;
+                mostraTabella(turni, mese, anno, statoSalvato);
+                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
+              } else {
+                document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Nessun turno trovato per questo mese/anno.</span>';
+              }
+              mostraLoader(false);
+            })
+            .catch(() => {
+              mostraLoader(false);
+              document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel caricamento dei turni!</span>';
             });
-            alert("Turni salvati correttamente!");
-        } catch(e) { alert("Errore nel salvataggio."); }
+        })
+        .catch(() => {
+          mostraLoader(false);
+          document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel recupero stato turni!</span>';
+        });
     }
 
-    // --- FUNZIONI UTILI ---
-    function getPasqua(a) {
-        const f = Math.floor, g = a % 19, c = f(a / 100), h = (c - f(c / 4) - f((8 * c + 13) / 25) + 19 * g + 15) % 30;
-        const i = h - f(h / 28) * (1 - f(h / 28) * f(29 / (h + 1)) * f((21 - g) / 11)), j = (a + f(a / 4) + i + 2 - c + f(c / 4)) % 7;
-        const l = i - j, m = 3 + f((l + 40) / 44), d = l + 28 - 31 * f(m / 4);
-        return new Date(a, m - 1, d);
+    function pulisciTabella() {
+      if (!meseCorrente || !annoCorrente) return;
+      
+      const popup = document.getElementById('custom-confirm-popup');
+      const btnOk = document.getElementById('custom-confirm-ok');
+      const btnCancel = document.getElementById('custom-confirm-cancel');
+      
+      popup.style.display = 'flex';
+
+      btnOk.onclick = () => {
+        popup.style.display = 'none';
+        const cacheKey = `turni_${annoCorrente}-${meseCorrente}`;
+        localStorage.removeItem(cacheKey); // Rimuove la cache per forzare il ricaricamento pulito
+
+        currentSelections = {}; // Clear the state object
+        // Svuota tutte le select
+        document.querySelectorAll('#output select').forEach(select => { select.value = ''; updateSelectColor(select); });
+        // Salva stato vuoto su backend
+        fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anno: Number(annoCorrente), mese: Number(meseCorrente), stato: {} })
+        });
+        aggiornaLegendaDebounced(); // Azzera la legenda visivamente
+        // Aggiorna tabella
+        caricaTurni();
+      };
+
+      btnCancel.onclick = () => {
+        popup.style.display = 'none';
+      };
+    }
+
+    function salvaTurniManuale() {
+      const mese = Number(meseCorrente || document.getElementById('mese').value);
+      const anno = Number(annoCorrente || document.getElementById('anno').value);
+      if (!mese || !anno) {
+        alert('Carica prima mese e anno.');
+        return;
+      }
+
+      clearTimeout(saveTimeout); // Evita doppio invio ravvicinato con l'auto-save
+      const statoDaSalvare = (currentSelections && typeof currentSelections === 'object') ? currentSelections : {};
+      const feedback = document.getElementById('salva-turni-feedback');
+
+      feedback.style.display = 'inline';
+      feedback.style.color = '#888';
+      feedback.textContent = isMobileDevice() ? 'Salvataggio manuale...' : 'salvataggio...';
+
+      fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anno, mese, stato: statoDaSalvare })
+      })
+      .then(() => {
+        salvaStatoInLocalStorage();
+        feedback.style.color = '#176d1a';
+        feedback.textContent = isMobileDevice() ? '\u2713 Turni salvati' : '\u2713 salvato';
+        setTimeout(() => { feedback.style.display = 'none'; }, 2500);
+      })
+      .catch(err => {
+        feedback.style.color = '#b80000';
+        feedback.textContent = '\u2717 errore: ' + (err && err.message ? err.message : err);
+      });
+    }
+
+    function getPasqua(anno) {
+      try {
+        const a = anno % 19, b = anno % 4, c = anno % 7, k = Math.floor(anno / 100), p = Math.floor((13 + 8 * k) / 25), q = Math.floor(k / 4);
+        const M = (15 - p + k - q) % 30, N = (4 + k - q) % 7, d = (19 * a + M) % 30, e = (2 * b + 4 * c + 6 * d + N) % 7;
+        const giorno = 22 + d + e;
+        const data = giorno > 31 ? new Date(anno, 3, giorno - 31) : new Date(anno, 2, giorno);
+        if (isNaN(data.getTime())) return null;
+        return data;
+      } catch (e) {
+        return null;
+      }
     }
 
     function isHoliday(date, pasqua) {
-        const g = date.getDate(), m = date.getMonth();
-        const fisse = [{g:1,m:0},{g:6,m:0},{g:25,m:3},{g:1,m:4},{g:2,m:5},{g:15,m:7},{g:1,m:10},{g:8,m:11},{g:25,m:11},{g:26,m:11}];
-        if (fisse.some(f => f.g === g && f.m === m)) return true;
-        const pq = new Date(pasqua); pq.setDate(pq.getDate() + 1);
-        return (g === pasqua.getDate() && m === pasqua.getMonth()) || (g === pq.getDate() && m === pq.getMonth());
+      const g = date.getDate(), m = date.getMonth();
+      const festeFisse = [
+        {g:1,m:0},   // 1 gennaio
+        {g:6,m:0},   // 6 gennaio
+        {g:25,m:3},  // 25 aprile (corretto: aprile è 3)
+        {g:1,m:4},   // 1 maggio
+        {g:2,m:5},   // 2 giugno
+        {g:15,m:7},  // 15 agosto
+        {g:15,m:6},  // 15 luglio
+        {g:1,m:10},  // 1 novembre
+        {g:8,m:11},  // 8 dicembre
+        {g:25,m:11}, // 25 dicembre
+        {g:26,m:11}  // 26 dicembre
+      ];
+      if (festeFisse.some(f => f.g === g && f.m === m)) return true;
+      if (!pasqua || !(pasqua instanceof Date) || isNaN(pasqua.getTime())) return false;
+      const pasquetta = new Date(pasqua);
+      pasquetta.setDate(pasqua.getDate() + 1);
+      return (g === pasqua.getDate() && m === pasqua.getMonth()) || (g === pasquetta.getDate() && m === pasquetta.getMonth());
     }
 
-    // --- GESTIONE PROGETTI ---
-    let progettoAttivoId = null;
-    function apriFormProgetto(id) {
-        progettoAttivoId = id;
-        document.getElementById('form-progetto-popup').style.display = 'flex';
-        document.getElementById('lista-pazienti').innerHTML = "";
-        aggiungiPaziente();
-    }
-    function aggiungiPaziente() {
-        const div = document.createElement('div');
-        div.innerHTML = `<input type="text" placeholder="Nome Paziente"> <input type="text" placeholder="Cartella">`;
-        document.getElementById('lista-pazienti').appendChild(div);
-    }
-    function chiudiFormProgetto() { document.getElementById('form-progetto-popup').style.display = 'none'; }
-    function salvaDatiProgetto() {
-        alert("Dati progetto registrati localmente. Saranno inviati al salvataggio.");
-        chiudiFormProgetto();
+    // statoSalvato: oggetto {selectId: valore, ...} oppure null
+    function mostraTabella(turni, mese, anno, statoSalvato) {
+      try {
+        console.log('DEBUG: mese=' + mese + ', anno=' + anno);
+        if (!turni || !turni.length) {
+          document.getElementById('output').innerHTML = '<b>Nessun turno trovato</b>';
+          return;
+        }
+        meseCorrente = mese;
+        annoCorrente = anno;
+        const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+        const titoloMese = `<h3 style='margin-bottom:0.5em;color:#2a4d7a;'>${NOMI_MESI[mese-1]} ${anno}</h3>`;
+        const pasqua = getPasqua(anno);
+        console.log('DEBUG: Pasqua =', pasqua);
+
+        // --- Performance Optimization: Event Delegation & State Initialization ---
+        currentSelections = {}; // Reset state for the new table
+        const outputDiv = document.getElementById('output');
+        outputDiv.removeEventListener('change', handleSelectChange); // Remove old listener if any
+        outputDiv.addEventListener('change', handleSelectChange); // Add a single, efficient listener
+
+        let html = `${titoloMese}<table><tr><th>Giorno</th><th>Settimana</th>${NOMI.map(n => `<th>${n}</th>`).join('')}</tr>`;
+
+        turni.forEach(t => {
+          const data = new Date(anno, mese - 1, t.giorno);
+          if (isNaN(data.getTime())) {
+            console.error('DEBUG: Data non valida per giorno', t.giorno, 'mese', mese, 'anno', anno);
+          }
+          const giornoSett = GIORNI_SETT[data.getDay()];
+          const isDomenica = data.getDay() === 0;
+          const isFestivo = isHoliday(data, pasqua);
+          const isSabato = data.getDay() === 6;
+          const classeRiga = (isDomenica || isFestivo) ? ' class="festivo"' : '';
+          html += `<tr${classeRiga}><td>${t.giorno}</td><td class="giorno-sett" data-full-day="${giornoSett}">${giornoSett}</td>`;
+
+          NOMI.forEach(nome => {
+            const festivoId = `festivo_${t.giorno}_${nome}`;
+            const mattinaId = `mattina_${t.giorno}_${nome}`;
+            const pomeriggioId = `pomeriggio_${t.giorno}_${nome}`;
+            const notteId = `notte_${t.giorno}_${nome}`;
+
+            if (isDomenica || isFestivo) {
+              html += `<td class="operator-cell"><div><small>&nbsp;</small>${selectSigla(festivoId, '', ['REP'])}</div></td>`;
+              currentSelections[festivoId] = ''; // Initialize state
+            } else {
+              const opzioniMattina = ['1', 'VA'];
+              const opzioniPomeriggio = ['2', 'PRO', 'VA'];
+              if (isSabato) opzioniPomeriggio.push('REP');
+              const opzioniNotte = ['REP'];
+              html += `<td class="operator-cell">
+                <div><small>M</small>${selectSigla(mattinaId, '', opzioniMattina)}</div>
+                <div><small>P</small>${selectSigla(pomeriggioId, '', opzioniPomeriggio)}</div>
+                <div><small>N</small>${selectSigla(notteId, '', opzioniNotte)}</div>
+              </td>`;
+              // Initialize state for non-holiday selects
+              currentSelections[mattinaId] = '';
+              currentSelections[pomeriggioId] = '';
+              currentSelections[notteId] = '';
+            }
+          });
+          html += '</tr>';
+        });
+        html += '</table>';
+        document.getElementById('output').innerHTML = html;
+
+        // Priority: Backend State (condiviso tra dispositivi) > LocalStorage > Default
+        const stateToApply = (statoSalvato && Object.keys(statoSalvato).length > 0) ? statoSalvato : {};
+
+        // Ripristina stato da backend se presente, altrimenti da cache JS o localStorage
+        if (stateToApply && typeof stateToApply === 'object' && Object.keys(stateToApply).length > 0) {
+          Object.keys(stateToApply).forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+              const value = stateToApply[selectId];
+              select.value = value;
+              updateSelectColor(select);
+              currentSelections[selectId] = value; // IMPORTANT: Sync currentSelections with the restored state
+            }
+          });
+        } else {
+          // If no state to apply, just ensure colors are correct for empty selects
+          document.querySelectorAll('#output select').forEach(updateSelectColor);
+        }
+
+        const saveFeedback = document.getElementById('salva-turni-feedback');
+        if (saveFeedback) {
+          saveFeedback.style.display = 'none';
+          saveFeedback.textContent = '';
+        }
+
+        aggiornaLegenda();
+        aggiornaEtichetteSettimanaResponsive();
+        aggiornaControlliLegendaMobile();
+        // La tabella di backup progetto è stata rimossa come da richiesta per evitare confusione.
+        // Se necessario, la sua logica può essere ripristinata o spostata in un'altra sezione.
+        const backupContainer = document.getElementById('progetto-backup-container');
+        if(backupContainer) {
+            backupContainer.innerHTML = '';
+        }
+      } catch (err) {
+        document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore di rendering tabella: ' + (err && err.message ? err.message : err) + '</span>';
+      }
     }
 
-    // --- BACKUP ---
+    function selectSigla(id, prefill, opzioni) {
+      // Determina il mese corrente per abilitare RR
+      let meseAttivo = meseCorrente ? Number(meseCorrente) : null;
+      const opzioniRR = [...opzioni];
+      if (MESI_RR.includes(meseAttivo)) {
+        opzioniRR.push('RR');
+      }
+      const opzioniComplete = [...new Set(['', 'F', 'RC', ...opzioniRR.filter(Boolean)])];
+      let s = `<select id="${id}">`; // Rimosso onchange per usare solo event delegation
+      opzioniComplete.forEach(sigla => {
+        // RR disabilitato se non è un mese abilitato
+        let disabled = '';
+        if (sigla === 'RR' && !MESI_RR.includes(meseAttivo)) disabled = 'disabled';
+        const selected = (prefill && sigla === prefill) ? 'selected' : '';
+        const label = sigla === 'F' ? 'F' : (sigla === 'RC' ? 'RC' : sigla);
+        s += `<option value="${sigla}" ${selected} ${disabled}>${label}</option>`;
+      });
+      return s + '</select>';
+    }
+
+    // --- Performance Optimization: Event Delegation Handler ---
+    function handleSelectChange(event) {
+      // This single function handles changes for ALL select elements inside #output
+      if (event.target.tagName === 'SELECT') {
+        gestisciEventiSelect(event.target);
+      }
+    }
+
+    function gestisciEventiSelect(select) {
+        currentSelections[select.id] = select.value; // Update state object
+        updateSelectColor(select);
+        gestisciFerie(select);
+        gestisciRC(select);
+        gestisciDoppioVA(select);
+        gestisciRepEsclusiva(select);
+        gestisciUnicitaVA_PRO(select);
+        // La legenda si aggiorna sempre, la fluidità è gestita dalle altre ottimizzazioni
+
+        // --- Su mobile il salvataggio è solo manuale tramite pulsante ---
+        clearTimeout(saveTimeout); // Cancella il timeout precedente se esiste
+        if (isMobileDevice()) {
+          segnalaModificheDaSalvare();
+        } else {
+          saveTimeout = setTimeout(() => {
+            console.log("Salvataggio automatico su server...");
+            if (meseCorrente && annoCorrente && Object.keys(currentSelections).length > 0) {
+              fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ anno: Number(annoCorrente), mese: Number(meseCorrente), stato: currentSelections })
+              });
+            }
+          }, isLandscapeCompatta() ? 3200 : (isPortraitMobile() ? 2600 : 2000));
+          salvaStatoInLocalStorageDebounced();
+        }
+
+        aggiornaLegendaDebounced();
+
+    // Se selezioni "VA" o "PRO" in una fascia (mattina/pomeriggio), rimuovilo dagli altri operatori per lo stesso giorno e fascia
+    function gestisciUnicitaVA_PRO(select) {
+      const idParts = select.id.split('_');
+      const fascia = idParts[0];
+      const giorno = idParts[1];
+      const nomeAttuale = idParts[2];
+      if ((fascia === 'mattina' || fascia === 'pomeriggio') && (select.value === 'VA' || select.value === 'PRO')) {
+        NOMI.forEach(nome => {
+          if (nome === nomeAttuale) return;
+          const altroSelect = document.getElementById(`${fascia}_${giorno}_${nome}`);
+          if (altroSelect && (altroSelect.value === select.value)) {
+            altroSelect.value = '';
+            updateSelectColor(altroSelect);
+            currentSelections[altroSelect.id] = ''; // Sync state object
+          }
+        });
+      }
+    }
+    }
+
+    function updateSelectColor(select) {
+      if (select.dataset.lastStyledValue === select.value) return;
+      const colors = {
+        'VA':{t:'#0a2377',b:'#b3d1ff'},      // blu chiaro
+        'PRO':{t:'#006b2e',b:'#b6ffd0'},    // verde chiaro
+        'REP':{t:'#b80000',b:'#ffd6d6'},    // rosso chiaro
+        'F':{t:'#444',b:'#e2e3e5'},         // grigio chiaro
+        'RC':{t:'#444',b:'#e2e3e5'},        // grigio chiaro
+        '1':{t:'#a65c00',b:'#ffe5b4'},      // arancione chiaro
+        '2':{t:'#4b2e83',b:'#e5d0f5'},      // viola chiaro
+        'E':{t:'#7a6f00',b:'#fff9c4'},      // giallo chiaro
+        'RR':{t:'#fff',b:'#e040fb'}         // magenta chiaro, testo bianco
+      };
+      const c = colors[select.value] || {t:'black',b:'white'};
+      select.style.color = c.t;
+      select.style.backgroundColor = c.b;
+      select.dataset.lastStyledValue = select.value;
+    }
+
+    // --- Performance Optimization: Legend calculation from state object ---
+    function aggiornaLegenda() {
+      const counts = {};
+      const pasqua = getPasqua(annoCorrente);
+      NOMI.forEach(nome => { counts[nome] = {'VA':0,'RR':0,'REP':0,'PRO':0,'1':0,'2':0,'RC':0,'VAx2':0,'REP ORE':0,'F':0}; });
+
+      // Iterate over the raw turni data, not the DOM
+      currentTurniData.forEach(t => {
+        const giorno = t.giorno;
+        const data = new Date(annoCorrente, meseCorrente - 1, giorno);
+        const dayOfWeek = data.getDay();
+        const isFestivoCompleto = dayOfWeek === 0 || isHoliday(data, pasqua);
+
+        NOMI.forEach(nome => {
+          let turniGiorno = [];
+          // Get values from the state object, not the DOM
+          if (isFestivoCompleto) {
+            turniGiorno.push(currentSelections[`festivo_${giorno}_${nome}`]);
+          } else {
+            turniGiorno.push(currentSelections[`mattina_${giorno}_${nome}`]);
+            turniGiorno.push(currentSelections[`pomeriggio_${giorno}_${nome}`]);
+            turniGiorno.push(currentSelections[`notte_${giorno}_${nome}`]);
+          }
+          turniGiorno = turniGiorno.filter(t => t); // Remove empty/null values
+
+          if (turniGiorno[0] === 'VA' && turniGiorno[1] === 'VA') counts[nome]['VAx2']++;
+          const repCount = turniGiorno.filter(t => t === 'REP').length;
+          if (repCount > 0) {
+            if (isFestivoCompleto) { counts[nome]['REP'] += 2; counts[nome]['REP ORE'] += 24; }
+            else if (dayOfWeek === 6) { counts[nome]['REP'] += 1.5; counts[nome]['REP ORE'] += 18; }
+            else { counts[nome]['REP'] += repCount; counts[nome]['REP ORE'] += repCount * 12; }
+          }
+
+          // Conteggia F e RC una sola volta per giorno, anche se presenti in più fasce
+          if (turniGiorno.includes('F')) counts[nome]['F'] += 1;
+          if (turniGiorno.includes('RC')) counts[nome]['RC'] += 1;
+
+          // Conteggia gli altri turni normalmente (esclusi F, RC, REP)
+          const altriTurni = turniGiorno.filter(t => t !== 'REP' && t !== 'F' && t !== 'RC');
+          altriTurni.forEach(turno => {
+            if (counts[nome].hasOwnProperty(turno) && turno) {
+              counts[nome][turno] += 1;
+            }
+          });
+        });
+      });
+
+      let legendaHtml = '';
+      const colors = {
+        'VA':'#0a2377',
+        'PRO':'#006b2e',
+        'REP':'#b80000',
+        'REP ORE':'#b80000',
+        'F':'#444',
+        'RC':'#444',
+        '1':'#a65c00',
+        '2':'#4b2e83',
+        'E':'#7a6f00',
+        'RR':'#e040fb',
+        'VAx2':'#0a2377'
+      };
+      NOMI.forEach(nome => {
+          legendaHtml += `<div class="legend-operator" style="background:#fff;">
+            <h5>${nome}</h5>
+            <div class="legend-counts" style="display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:space-between;">
+              <span style="color:${colors['1']};font-weight:bold;">1: <b>${counts[nome]['1']}</b></span>
+              <span style="color:${colors['2']};font-weight:bold;">2: <b>${counts[nome]['2']}</b></span>
+              <span style="color:${colors.VA};font-weight:bold;">VA: <b>${counts[nome]['VA']}</b></span>
+              <span style="color:${colors.VAx2};font-weight:bold;">VAx2: <b>${counts[nome]['VAx2']}</b></span>
+              <span style="color:${colors.RC};font-weight:bold;">RC: <b>${counts[nome]['RC']}</b></span>
+              <span style="color:${colors.REP};font-weight:bold;">REP: <b>${counts[nome]['REP']}</b></span>
+              <span style="color:${colors['REP ORE']};font-weight:bold;">REP Ore: <b>${counts[nome]['REP ORE']}</b></span>
+              <span style="color:${colors.PRO};font-weight:bold;">PRO: <b>${counts[nome]['PRO']}</b></span>
+              <span style="color:${colors.F};font-weight:bold;">F: <b>${counts[nome]['F']}</b></span>
+              <span style="color:${colors['RR']};font-weight:bold;">RR: <b>${counts[nome]['RR']}</b></span>
+            </div>
+          </div>`;
+      });
+      document.getElementById('legenda-operatori').innerHTML = legendaHtml;
+      legendaDirty = false;
+      aggiornaControlliLegendaMobile();
+    }
+
+    function gestisciAutomazione(select, tipo) {
+        const valore = (select.value || '').trim();
+        const idParts = select.id.split('_');
+        if (idParts[0] === 'festivo') return;
+        const giorno = idParts[1], nome = idParts[2];
+        const fasce = ['mattina', 'pomeriggio', 'notte'];
+        const gruppo = fasce
+          .map(fascia => document.getElementById(`${fascia}_${giorno}_${nome}`))
+          .filter(Boolean);
+
+        // Se imposti F/RC su una fascia, replica su tutte e 3
+        if (valore === tipo) {
+          gruppo.forEach(altroSelect => {
+            if ((altroSelect.value || '').trim() !== tipo) {
+              altroSelect.value = tipo;
+              updateSelectColor(altroSelect);
+              currentSelections[altroSelect.id] = tipo;
+            }
+          });
+          return;
+        }
+
+        // Se svuoti una fascia che era parte del blocco F/RC, svuota tutte e 3
+        if (valore === '') {
+          const contieneTipo = gruppo.some(s => (s.value || '').trim() === tipo);
+          if (contieneTipo) {
+            gruppo.forEach(altroSelect => {
+              if ((altroSelect.value || '').trim() === tipo) {
+                altroSelect.value = '';
+                updateSelectColor(altroSelect);
+                currentSelections[altroSelect.id] = '';
+              }
+            });
+          }
+        }
+    }
+    function gestisciFerie(select) { gestisciAutomazione(select, 'F'); }
+    function gestisciRC(select) { gestisciAutomazione(select, 'RC'); }
+
+    function gestisciRepEsclusiva(select) {
+      if (select.value.trim() !== 'REP') return;
+      const [fascia, giorno, nomeAttuale] = select.id.split('_');
+      NOMI.forEach(nome => {
+        if (nome === nomeAttuale) return;
+        const altroSelect = document.getElementById(`${fascia}_${giorno}_${nome}`);
+        if (altroSelect && altroSelect.value.trim() === 'REP') {
+          altroSelect.value = '';
+          updateSelectColor(altroSelect);
+          currentSelections[altroSelect.id] = ''; // Sync state object
+        }
+      });
+    }
+
+    function gestisciDoppioVA(select) {
+      const [fascia, giorno, nome] = select.id.split('_');
+      if (fascia !== 'mattina' && fascia !== 'pomeriggio') return;
+      const mattina = document.getElementById(`mattina_${giorno}_${nome}`);
+      const pomeriggio = document.getElementById(`pomeriggio_${giorno}_${nome}`);
+      if (mattina && pomeriggio && mattina.value === 'VA' && pomeriggio.value === 'VA') {
+        for (let i = parseInt(giorno, 10); i <= new Date(annoCorrente, meseCorrente, 0).getDate(); i++) {
+          const dataControllo = new Date(annoCorrente, meseCorrente - 1, i);
+          if (dataControllo.getDay() === 6) {
+            ['mattina', 'pomeriggio', 'notte'].forEach(fasciaSabato => {
+              const selectSabato = document.getElementById(`${fasciaSabato}_${i}_${nome}`);
+              if (selectSabato) {
+                selectSabato.value = 'RC';
+                updateSelectColor(selectSabato);
+                currentSelections[selectSabato.id] = 'RC'; // Sync state object
+              }
+            });
+            break;
+          }
+        }
+      }
+    }
+
     function generaAnteprimaBackup() {
-        const preview = document.getElementById('preview-container');
-        preview.innerHTML = "<h3>Anteprima Backup Semplificata</h3><p>Verrà generata una tabella piatta per l'archivio.</p>";
-        document.getElementById('conferma-salvataggio-btn').style.display = 'block';
+      const mese = Number(document.getElementById('mese').value);
+      const anno = Number(document.getElementById('anno').value);
+      const table = document.querySelector('#output table');
+      if (!table) return alert('Nessuna tabella trovata!');
+
+      const GIORNI_SETT_INIZIALI = ["D", "L", "M", "M", "G", "V", "S"];
+      const pasqua = getPasqua(anno);
+      const header = ['TSRM'];
+      for (let i = 1; i <= new Date(anno, mese, 0).getDate(); i++) {
+        const data = new Date(anno, mese - 1, i);
+        header.push({ giorno: i, iniziale: GIORNI_SETT_INIZIALI[data.getDay()], isFestivo: data.getDay() === 0 || isHoliday(data, pasqua, anno) });
+      }
+
+      const tabellaSemplificata = [header.map(h => typeof h === 'object' ? `${h.giorno} ${h.iniziale}` : h)];
+      NOMI.forEach((nome, indiceNome) => {
+        // Mostra sempre "VENTI" per ogni nome che inizia con VENT
+        const nomeVisualizzato = nome.startsWith('VENT') ? 'VENTI' : nome.substring(0, 4);
+        const rigaOperatore = [nomeVisualizzato];
+        // Iterate from day 1 to end of month
+        for (let giorno = 1; giorno <= new Date(anno, mese, 0).getDate(); giorno++) {
+            const data = new Date(anno, mese - 1, giorno);
+            const isFestivoRow = data.getDay() === 0 || isHoliday(data, pasqua);
+            let turniCella = [];
+            // Get values from the state object
+            if (isFestivoRow) {
+              const turno = currentSelections[`festivo_${giorno}_${nome}`];
+              if (turno) turniCella.push(turno);
+            } else {
+              const turnoM = currentSelections[`mattina_${giorno}_${nome}`];
+              const turnoP = currentSelections[`pomeriggio_${giorno}_${nome}`];
+              const turnoN = currentSelections[`notte_${giorno}_${nome}`];
+
+              if (turnoM === 'VA') turniCella.push('<span style="white-space: nowrap;">VA<small style="color:blue;">(M)</small></span>');
+              else if (turnoM) turniCella.push(turnoM);
+
+              if (turnoP === 'VA') turniCella.push('<span style="white-space: nowrap;">VA<small style="color:orange;">(P)</small></span>');
+              else if (turnoP) turniCella.push(turnoP);
+
+              if (turnoN) turniCella.push(turnoN);
+            }
+
+            // Logica per unire i turni, mostrando F e RC una sola volta
+            const unici = [];
+            turniCella.forEach(t => {
+              const cleanTurno = t.replace(/<[^>]*>/g, '').substring(0, 2); // Prende solo la sigla (es. 'VA' da '<span>VA...')
+              if ((cleanTurno === 'F' || cleanTurno === 'RC') && unici.some(u => u.startsWith(cleanTurno))) {
+                // non fare nulla, già presente
+              } else {
+                unici.push(t);
+              }
+            });
+            const testoCella = unici.join('<br>');
+            rigaOperatore.push(testoCella);
+        }
+        tabellaSemplificata.push(rigaOperatore);
+      });
+
+      datiBackupDaSalvare = { mese, anno, tabella: tabellaSemplificata.map(riga => riga.map(cella => cella.replace(/<br>/g, ' / '))) };
+
+      let previewHtml = '<h4>Anteprima Salvataggio</h4><div class="preview-table-wrapper"><table><tr>';
+      header.forEach((h, idx) => {
+        const classe = (typeof h === 'object' && h.isFestivo) ? ' class="header-festivo"' : '';
+        let style = '';
+        if (idx === 0) {
+          // Colonna nomi operatori più lunga (più spazio orizzontale, testo normale)
+          style = ' style="min-width:100px;max-width:140px;"';
+        } else {
+          // Celle dei giorni più strette
+          style = ' style="min-width:28px;max-width:50px;font-size:0.95em;padding:2px 2px;"';
+        }
+        const testo = typeof h === 'object' ? `${h.giorno}&nbsp;${h.iniziale}` : h;
+        previewHtml += `<th${classe}${style}>${testo}</th>`;
+      });
+      previewHtml += '</tr>';
+      tabellaSemplificata.slice(1).forEach(riga => {
+        previewHtml += `<tr>${riga.map((cella, i) => {
+          if (i === 0) {
+            // Nomi abbreviati in grassetto e centrati
+            return `<td style="font-weight:bold;background-color:#f4f8fb;text-align:center;vertical-align:middle;min-width:100px;max-width:140px;font-size:0.85em;">${cella || ''}</td>`;
+          } else {
+            // Celle dei turni: ritorna alla dimensione precedente (0.95em)
+            return `<td style="min-width:38px;max-width:50px;font-size:0.95em;text-align:center;">${cella || ''}</td>`;
+          }
+        }).join('')}</tr>`;
+      });
+      previewHtml += '</table></div>';
+      document.getElementById('preview-container').innerHTML = previewHtml;
+      document.getElementById('conferma-salvataggio-btn').style.display = 'inline-block';
+      document.getElementById('chiudi-anteprima-btn').style.display = 'inline-block';
     }
+
     function confermaSalvataggioBackup() {
-        alert("Inviando i dati all'archivio Google Sheets...");
+      if (!datiBackupDaSalvare) return alert("Nessun dato di anteprima da salvare.");
+      const { mese, anno, tabella } = datiBackupDaSalvare;
+      const feedback = document.getElementById('feedback-message');
+      feedback.style.display = 'block';
+      feedback.style.backgroundColor = '#e0f7fa';
+      feedback.style.color = '#007bff';
+      feedback.textContent = 'Salvataggio in corso...';
+
+      fetch(APPSCRIPT_URL + '?action=salvaTabellaSemplificata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mese, anno, tabella })
+      })
+      .then(() => {
+        feedback.style.backgroundColor = '#d4edda';
+        feedback.style.color = '#28a745';
+        feedback.textContent = 'Salvataggio completato!';
+        setTimeout(() => { feedback.style.display = 'none'; }, 3000);
         document.getElementById('conferma-salvataggio-btn').style.display = 'none';
+        document.getElementById('chiudi-anteprima-btn').style.display = 'none';
+        if (document.getElementById('archivio-container').style.display === 'block') caricaListaArchivio();
+      })
+      .catch(err => {
+        feedback.style.backgroundColor = '#f8d7da';
+        feedback.style.color = '#dc3545';
+        feedback.textContent = 'Errore: ' + (err && err.message ? err.message : err);
+        setTimeout(() => { feedback.style.display = 'none'; }, 5000);
+      });
     }
+
+    function chiudiAnteprima() {
+      document.getElementById('preview-container').innerHTML = '';
+      document.getElementById('progetto-backup-container').innerHTML = '';
+      document.getElementById('conferma-salvataggio-btn').style.display = 'none';
+      document.getElementById('chiudi-anteprima-btn').style.display = 'none';
+    }
+
     function toggleArchivio() {
-        const c = document.getElementById('archivio-container');
-        c.style.display = c.style.display === 'none' ? 'block' : 'none';
+      const container = document.getElementById('archivio-container');
+      if (container.style.display === 'none') {
+        // Svuota la cache localStorage dei turni ogni volta che si apre l’archivio per evitare conflitti
+        Object.keys(localStorage).forEach(k => { if (k.startsWith('turni_')) localStorage.removeItem(k); });
+        container.style.display = 'block';
+        caricaListaArchivio();
+      } else {
+        container.style.display = 'none';
+      }
     }
+
+
+    function cercaArchivio() {
+      const mese = document.getElementById('archivio-filtro-mese').value;
+      const anno = document.getElementById('archivio-filtro-anno').value;
+      if (!mese || !anno) {
+        document.getElementById('archivio-preview').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Seleziona mese e anno!</span>';
+        return;
+      }
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const nomeFoglio = NOMI_MESI[parseInt(mese,10)-1] + ' ' + anno;
+      caricaAnteprimaArchiviata(nomeFoglio, true);
+    }
+
+    function caricaAnteprimaArchiviata(nomeFoglio, mostraIntestazione) {
+      const previewDiv = document.getElementById('archivio-preview');
+      document.getElementById('reperibilita-container').innerHTML = ''; // Pulisce la tabella reperibilità
+      previewDiv.innerHTML = 'Caricamento...';
+      let timeoutId = setTimeout(() => {
+        if (previewDiv.innerHTML === 'Caricamento...') {
+          previewDiv.innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore: nessuna risposta dal server (timeout)!</span>';
+        }
+      }, 3000);
+      // Pulisce la preview senza debug
+      const debugDiv = document.getElementById('archivio-preview');
+      debugDiv.innerHTML = '';
+      fetch(APPSCRIPT_URL + '?action=getDatiFoglio&nomeFoglio=' + encodeURIComponent(nomeFoglio))
+        .then(r => r.json())
+        .then(datiTabella => {
+          clearTimeout(timeoutId);
+          window.datiTabellaCorrente = datiTabella;
+          if (datiTabella && datiTabella.length > 0) {
+            let mese = null, anno = null;
+            const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+            const match = nomeFoglio.match(/^([A-Za-zàèéìòù]+)\s+(\d{4})$/);
+            if (match) {
+              const nomeMese = match[1];
+              anno = parseInt(match[2], 10);
+              mese = NOMI_MESI.findIndex(m => m.toLowerCase() === nomeMese.toLowerCase()) + 1;
+            }
+            let pasqua = null;
+            if (anno) pasqua = getPasqua(anno);
+
+            let previewHtml = '';
+            if (mostraIntestazione && mese && anno) {
+              previewHtml += `<h4 style='color:#2a4d7a;text-align:center;'>Archivio: ${NOMI_MESI[mese-1]} ${anno}</h4>`;
+            }
+            previewHtml += '<div class="preview-table-wrapper"><table>';
+            datiTabella.forEach((riga, index) => {
+              previewHtml += '<tr>';
+              riga.forEach((cella, cellIndex) => {
+                let tag = 'td';
+                let style = '';
+                let classe = '';
+                if (index === 0) {
+                  tag = 'th';
+                  if (cellIndex > 0 && mese && anno) {
+                    const giornoMatch = String(cella || '').match(/^(\d{1,2})/);
+                    if (giornoMatch) {
+                      const giorno = parseInt(giornoMatch[1], 10);
+                      const data = new Date(anno, mese - 1, giorno);
+                      const isFestivo = data.getDay() === 0 || (pasqua && isHoliday(data, pasqua));
+                      if (isFestivo) classe = 'header-festivo';
+                    }
+                  }
+                } else if (cellIndex === 0) {
+                  tag = 'th';
+                  style = ' style="font-weight:bold;background-color:#f4f8fb;"';
+                }
+                let contenutoCella = String(cella == null ? '' : cella).replace(/ \/ /g, '<br>');
+                if (index !== 0 && cellIndex !== 0 && contenutoCella) {
+                  // Colora ogni codice turno come nella tabella principale
+                  const colori = {
+                    'VA':'#0a2377',
+                    'PRO':'#006b2e',
+                    'REP':'#b80000',
+                    'F':'#444',
+                    'RC':'#444',
+                    '1':'#a65c00',
+                    '2':'#4b2e83',
+                    'E':'#7a6f00',
+                    'RR':'#e040fb'
+                  };
+                  const parti = contenutoCella.split('<br>');
+                  const giornoLabel = datiTabella[0][cellIndex];
+                  const giornoMatch = giornoLabel ? String(giornoLabel).match(/^(\d{1,2})/) : null;
+                  const giorno = giornoMatch ? parseInt(giornoMatch[1], 10) : null;
+                  contenutoCella = parti.map(t => {
+                    const clean = t.replace(/<[^>]*>/g, '');
+                    if (clean === 'PRO' && giorno) {
+                      return `<span class='pro-link' style='color:${colori['PRO']};cursor:pointer;text-decoration:underline;' onclick="apriFormProgetto('${giorno}', '${riga[0]}', '${mese}', '${anno}')">PRO</span>`;
+                    } else if (colori[clean]) {
+                      // RR testo bianco
+                      const style = clean === 'RR' ? `color:#fff;background:${colori['RR']};padding:1px 4px;border-radius:4px;` : `color:${colori[clean]}`;
+                      return `<span style='${style}'>${t}</span>`;
+                    } else {
+                      return t;
+                    }
+                  }).join('<br>');
+                }
+                previewHtml += `<${tag}${style}${classe ? ' class="'+classe+'"' : ''}>${contenutoCella}</${tag}>`;
+              });
+              previewHtml += '</tr>';
+            });
+            // ...existing code...
+            document.getElementById('archivio-preview').innerHTML = previewHtml;
+          } else {
+            document.getElementById('archivio-preview').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
+          }
+        });
+                <input type='hidden' id='progetto-operatore'>
+                <input type='hidden' id='progetto-mese'>
+                <input type='hidden' id='progetto-anno'>
+                <div style='display:flex;flex-direction:row;gap:8px;align-items:flex-end;'>
+                  <label style='flex:1;display:flex;flex-direction:column;gap:2px;'>
+                    <span style="font-size:0.97em;font-weight:500;">Ora inizio globale</span>
+                    <input type='time' id='progetto-ora-inizio-globale' style='width:70px;min-width:50px;max-width:90px;' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
+                  </label>
+                  <label style='flex:1;display:flex;flex-direction:column;gap:2px;'>
+                    <span style="font-size:0.97em;font-weight:500;">Ora fine globale</span>
+                    <input type='time' id='progetto-ora-fine-globale' style='width:70px;min-width:50px;max-width:90px;' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
+                  </label>
+                  <div style='flex:0.7;display:flex;flex-direction:column;gap:2px;max-width:50px;'>
+                    <span style="font-size:0.97em;font-weight:500;">Tot ore</span>
+                    <input type='text' id='progetto-tot-ore-globale' style='width:38px;min-width:28px;max-width:50px;background:#f4f8fb;text-align:center;font-size:0.98em;' readonly>
+                  </div>
+                </div>
+                <div id='progetto-procedure-list' style='display:flex;flex-direction:column;gap:12px;'></div>
+                <div style="display:flex;flex-direction:row;gap:10px;align-items:center;justify-content:flex-start;">
+                  <button type='button' onclick='aggiungiProceduraProgetto()' style='background:#007bff;color:#fff;padding:4px 14px;border:none;border-radius:4px;font-size:1em;'>Aggiungi procedura</button>
+                </div>
+                <div style="display:flex;flex-direction:row;gap:12px;justify-content:flex-end;align-items:center;margin-top:8px;">
+                  <button type='button' onclick='salvaDatiProgetto()' style='background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;'>Conferma/Chiudi</button>
+                  <button type='button' onclick='chiudiFormProgetto()' style='background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;'>Annulla</button>
+                </div>
+              </form>
+              <span id='progetto-feedback' style='display:none;margin-top:1em;'></span>
+            </div>
+          </div>`;
+              // Funzioni per popup progetto GLOBALI
+              window.apriFormProgetto = function(giorno, operatore, mese, anno) {
+                const popup = document.getElementById('form-progetto-popup');
+                popup.style.display = 'flex';
+                document.getElementById('progetto-giorno').value = giorno;
+                document.getElementById('progetto-operatore').value = operatore;
+                document.getElementById('progetto-mese').value = mese;
+                document.getElementById('progetto-anno').value = anno;
+                document.getElementById('progetto-feedback').style.display = 'none';
+                // Recupera dati già inseriti per quel giorno/operatore/mese/anno (array di procedure)
+                fetch(APPSCRIPT_URL + '?action=getDatiProgetto', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ giorno, operatore, mese, anno })
+                })
+                .then(r => r.json())
+                .then(dati => {
+                  if (dati && typeof dati === 'object' && (dati.oraInizioGlobale || dati.oraFineGlobale || (Array.isArray(dati.procedure) && dati.procedure.length))) {
+                    renderProceduraProgetto(dati);
+                    setTimeout(() => { popup.style.display = 'flex'; }, 0);
+                  } else {
+                    renderProceduraProgetto({ oraInizioGlobale: '', oraFineGlobale: '', procedure: [] });
+                    setTimeout(() => { popup.style.display = 'flex'; }, 0);
+                  }
+                });
+              }
+
+              window.aggiungiProceduraProgetto = function() {
+                const lista = document.getElementById('progetto-procedure-list');
+                const div = document.createElement('div');
+                div.className = 'progetto-procedura-item';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'row';
+                div.style.gap = '10px';
+                div.style.alignItems = 'flex-end';
+                div.innerHTML = `
+                  <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                    <span style="font-size:0.96em;">Tipo procedura</span>
+                    <input type='text' class='progetto-tipo-procedura' style='width:100%;min-width:80px;'>
+                  </label>
+                  <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                    <span style="font-size:0.96em;">Nome paziente</span>
+                    <input type='text' class='progetto-paziente' style='width:100%;min-width:80px;'>
+                  </label>
+                  <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                    <span style="font-size:0.96em;">Numero cartella</span>
+                    <input type='text' class='progetto-cartella' style='width:100%;min-width:70px;'>
+                  </label>
+                  <button type='button' onclick='this.parentNode.remove()' style='background:#dc3545;color:#fff;padding:6px 12px;border:none;border-radius:4px;font-size:0.97em;margin-left:8px;'>Rimuovi</button>
+                `;
+                lista.appendChild(div);
+              }
+
+              window.renderProceduraProgetto = function(dati) {
+                // dati: { oraInizioGlobale, oraFineGlobale, procedure: [] }
+                const lista = document.getElementById('progetto-procedure-list');
+                lista.innerHTML = '';
+                document.getElementById('progetto-ora-inizio-globale').value = dati && dati.oraInizioGlobale ? dati.oraInizioGlobale : '';
+                document.getElementById('progetto-ora-fine-globale').value = dati && dati.oraFineGlobale ? dati.oraFineGlobale : '';
+                // Calcolo automatico e sempre visibile
+                const aggiornaTotOre = () => {
+                  const inizio = document.getElementById('progetto-ora-inizio-globale').value;
+                  const fine = document.getElementById('progetto-ora-fine-globale').value;
+                  const totOreInput = document.getElementById('progetto-tot-ore-globale');
+                  if (inizio && fine && totOreInput) {
+                    const [h1, m1] = inizio.split(':').map(Number);
+                    const [h2, m2] = fine.split(':').map(Number);
+                    let diff = (h2 + m2/60) - (h1 + m1/60);
+                    if (diff < 0) diff += 24;
+                    totOreInput.value = Math.round(diff * 100) / 100;
+                  } else if (totOreInput) {
+                    totOreInput.value = '';
+                  }
+                  if (totOreInput) totOreInput.style.background = '#f4f8fb';
+                };
+                aggiornaTotOre();
+                document.getElementById('progetto-ora-inizio-globale').addEventListener('change', aggiornaTotOre);
+                document.getElementById('progetto-ora-inizio-globale').addEventListener('input', aggiornaTotOre);
+                document.getElementById('progetto-ora-fine-globale').addEventListener('change', aggiornaTotOre);
+                document.getElementById('progetto-ora-fine-globale').addEventListener('input', aggiornaTotOre);
+                const procedure = dati && Array.isArray(dati.procedure) ? dati.procedure : [];
+                if (!procedure.length) window.aggiungiProceduraProgetto();
+                else procedure.forEach(p => {
+                  const div = document.createElement('div');
+                  div.className = 'progetto-procedura-item';
+                  div.style.display = 'flex';
+                  div.style.flexDirection = 'row';
+                  div.style.gap = '10px';
+                  div.style.alignItems = 'flex-end';
+                  div.innerHTML = `
+                    <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                      <span style="font-size:0.96em;">Tipo procedura</span>
+                      <input type='text' class='progetto-tipo-procedura' value='${p.tipoProcedura||''}' style='width:100%;min-width:80px;'>
+                    </label>
+                    <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                      <span style="font-size:0.96em;">Nome paziente</span>
+                      <input type='text' class='progetto-paziente' value='${p.paziente||''}' style='width:100%;min-width:80px;'>
+                    </label>
+                    <label style='flex:1;display:flex;flex-direction:column;gap:4px;'>
+                      <span style="font-size:0.96em;">Numero cartella</span>
+                      <input type='text' class='progetto-cartella' value='${p.cartella||''}' style='width:100%;min-width:70px;'>
+                    </label>
+                    <button type='button' onclick='this.parentNode.remove()' style='background:#dc3545;color:#fff;padding:6px 12px;border:none;border-radius:4px;font-size:0.97em;margin-left:8px;'>Rimuovi</button>
+                  `;
+                  lista.appendChild(div);
+                });
+              }
+
+              window.calcolaTotOreProcedura = function(input) {
+                const div = input.closest('.progetto-procedura-item');
+                const inizio = div.querySelector('.progetto-ora-inizio').value;
+                const fine = div.querySelector('.progetto-ora-fine').value;
+                const totOreInput = div.querySelector('.progetto-tot-ore');
+                if (inizio && fine) {
+                  const [h1, m1] = inizio.split(':').map(Number);
+                  const [h2, m2] = fine.split(':').map(Number);
+                  let diff = (h2 + m2/60) - (h1 + m1/60);
+                  if (diff < 0) diff += 24;
+                  totOreInput.value = Math.round(diff * 100) / 100;
+                } else {
+                  totOreInput.value = '';
+                }
+              }
+              window.chiudiFormProgetto = function() {
+                document.getElementById('form-progetto-popup').style.display = 'none';
+              }
+              window.salvaDatiProgetto = function() {
+                const giorno = document.getElementById('progetto-giorno').value;
+                const operatore = document.getElementById('progetto-operatore').value;
+                const mese = document.getElementById('progetto-mese').value;
+                const anno = document.getElementById('progetto-anno').value;
+                const oraInizioGlobale = document.getElementById('progetto-ora-inizio-globale').value;
+                const oraFineGlobale = document.getElementById('progetto-ora-fine-globale').value;
+                // Raccogli tutte le procedure inserite
+                const lista = document.getElementById('progetto-procedure-list');
+                const procedure = Array.from(lista.querySelectorAll('.progetto-procedura-item')).map(div => ({
+                  tipoProcedura: div.querySelector('.progetto-tipo-procedura').value,
+                  paziente: div.querySelector('.progetto-paziente').value,
+                  cartella: div.querySelector('.progetto-cartella').value
+                })).filter(p => p.tipoProcedura || p.paziente || p.cartella);
+                // Salva oggetto con orario globale e array di procedure
+                fetch(APPSCRIPT_URL + '?action=salvaDatiProgetto', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure})
+                })
+                .then(() => {
+                  document.getElementById('progetto-feedback').style.display = 'block';
+                  document.getElementById('progetto-feedback').style.color = '#176d1a';
+                  document.getElementById('progetto-feedback').textContent = 'Dati progetto salvati!';
+                  setTimeout(window.chiudiFormProgetto, 800); // chiudi dopo breve attesa
+                })
+                .catch(() => {
+                  document.getElementById('progetto-feedback').style.display = 'block';
+                  document.getElementById('progetto-feedback').style.color = '#dc3545';
+                  document.getElementById('progetto-feedback').textContent = 'Errore salvataggio!';
+                });
+              }
+          previewHtml += '</table></div>';
+
+          // Aggiungi i pulsanti per generare le tabelle
+          if (mese && anno) {
+            previewHtml += `<div style="text-align:center; margin-top:1.5em;display:flex;gap:18px;justify-content:center;">
+                <button class="save-btn" style="background-color:#176d1a;" onclick="generaTabellaProgetto(${mese}, ${anno})">
+                  Genera Tabella Progetto
+                </button>
+                <button class="save-btn" style="background-color:#008B8B;" onclick="generaTabellaUnificata(${mese}, ${anno})">
+                  Genera Turni Vasco/REPE
+                </button>
+              </div>`;
+          }
+// --- TABELLA PROGETTO DA FOGLIO PROGETTI ---
+
+// --- TABELLA PROGETTO DA FOGLIO PROGETTI ---
+window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
+  // Rende la funzione globale per l'ambiente Apps Script
+  // Scegli il contenitore giusto: se esiste reperibilita-container (archivio), usa quello, altrimenti preview-container (pagina principale)
+  let container = document.getElementById('reperibilita-container');
+  if (!container) {
+    container = document.getElementById('preview-container');
+  }
+  if (!container) {
+    alert('Errore: nessun contenitore trovato per mostrare la tabella progetto!');
+    console.error('[DEBUG generaTabellaProgetto] Nessun container trovato!');
+    return;
+  }
+  container.innerHTML = `<p style="text-align:center;color:#007bff;font-weight:bold;">Generazione tabella progetto in corso...</p>`;
+  setTimeout(() => {
+    if (container.innerHTML.includes('Generazione tabella progetto in corso')) {
+      container.innerHTML = `<span style='color:#dc3545;font-weight:bold;'>Nessun dato ricevuto dal server.<br>Verifica la connessione o contatta l'amministratore.</span>`;
+    }
+  }, 5000);
+  fetch(APPSCRIPT_URL + '?action=getTabellaProgettoMese', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mese: Number(mese), anno: Number(anno) })
+  })
+  .then(r => r.json())
+  .then(dati => {
+    // Mostra sempre il risultato grezzo per debug
+    if (!Array.isArray(dati) || dati.length === 0) {
+      container.innerHTML = `<p style='text-align:center;color:#b80000;font-weight:bold;'>Nessun progetto trovato per il mese selezionato.</p>`;
+      return;
+    }
+    // Header
+    let html = `<h3 style='color:#176d1a;text-align:center;margin-bottom:0.2em;font-size:1.18em;'>PROGETTI VASCOLARI MESE ${('0'+mese).slice(-2)}/${anno}</h3>`;
+    html += `<div style='display:flex;justify-content:center;gap:18px;margin-bottom:1em;'>
+      <button onclick="window.esportaProgettoPDF()" style="background:#b80000;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta PDF</button>
+      <button onclick="window.esportaProgettoExcel()" style="background:#176d1a;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta Excel</button>
+      <button onclick="window.chiudiTabellaProgetto()" style="background:#222;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Chiudi</button>
+    </div>`;
+    html += `<div style='overflow-x:auto;'><table id="tabella-progetto-stampabile" style='margin:0 auto 1.5em auto;font-size:1.05em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;'>`;
+    html += `<caption style='caption-side:top;padding:12px 0 8px 0;font-size:1.18em;font-weight:bold;color:#1a2a3a;background:#eaf2fa;border-radius:10px 10px 0 0;'>PROGETTI VASCOLARI MESE APRILE 26</caption>`;
+    html += `<tr style='background:#eaf2fa;color:#1a2a3a;'>`
+      +`<th style='padding:10px 0;min-width:120px;font-weight:bold;background:#f7fafc;'>TSRM</th>`
+      +`<th style='min-width:110px;font-weight:bold;background:#f7fafc;'>Data</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Giorno</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Entrata</th>`
+      +`<th style='min-width:90px;font-weight:bold;background:#f7fafc;'>Ora Uscita</th>`
+      +`<th style='min-width:80px;font-weight:bold;background:#f7fafc;'>Totale Ore</th>`
+    </tr>`;
+    // ...existing code...
+    dati.forEach(row => {
+      const isFestivo = row.isFestivo;
+      const coloreData = isFestivo ? '#b80000' : '#111';
+      const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+      // Normalizza nome operatore se abbreviato
+      let op = row.operatore;
+      if (op && op.length <= 5) {
+        const mappaNomi = { 'MACA':'MACALUSO', 'DINO':'DINOLFO', 'NAPO':'NAPOLI', 'VENTI':'VENTIMIGLIA', 'VENT':'VENTIMIGLIA' };
+        const op4 = op.toUpperCase().substring(0,4);
+        if (mappaNomi[op4]) op = mappaNomi[op4];
+      }
+      // Calcola la differenza tra oraFine e oraInizio (formato HH:MM)
+      let totOre = '';
+      if (row.oraInizio && row.oraFine) {
+        const [h1, m1] = row.oraInizio.split(':').map(Number);
+        const [h2, m2] = row.oraFine.split(':').map(Number);
+        if (!isNaN(h1) && !isNaN(m1) && !isNaN(h2) && !isNaN(m2)) {
+          let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+          if (diff < 0) diff += 24 * 60; // gestisce passaggio mezzanotte
+          const ore = Math.floor(diff / 60);
+          const min = diff % 60;
+          totOre = ore + (min > 0 ? (':' + (min < 10 ? '0' : '') + min) : '');
+        }
+      }
+      html += `<tr style='background:#f7fafc;'>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${op}</td>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${row.data}</td>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${row.giornoSett}</td>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${row.oraInizio}</td>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${row.oraFine}</td>`+
+        `<td style='color:#1a2a3a;background:#f7fafc;'>${totOre}</td>`+
+      `</tr>`;
+    });
+    html += `</table></div>`;
+    container.innerHTML = html;
+  })
+  .catch(err => {
+    let msg = (err && err.message) ? err.message : '';
+    container.innerHTML = `<span style='color:#dc3545;font-weight:bold;'>Errore nel caricamento dei dati progetto!<br>${msg}</span><br><span style='color:#888;'>Controlla i log Apps Script per dettagli.</span>`;
+  });
+};
+
+          document.getElementById('archivio-preview').innerHTML = previewHtml;
+        } else {
+          document.getElementById('archivio-preview').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
+        }
+      }).getDatiFoglio(nomeFoglio);
+    }
+
+    // Variabile globale per i dati della tabella: usare sempre window.datiTabellaCorrente
+    function generaTabellaReperibilita(mese, anno) {
+      // Rende la funzione globale per l'ambiente Apps Script
+      window.generaTabellaReperibilita = generaTabellaReperibilita;
+      const container = document.getElementById('reperibilita-container');
+      container.innerHTML = `<p style="text-align:center;color:#007bff;font-weight:bold;">Generazione tabella reperibilità in corso...</p>`;
+      const datiTabella = window.datiTabellaCorrente;
+      if (!datiTabella || !mese || !anno) {
+        container.innerHTML = '<span style="color:#dc3545;font-weight:bold;">Dati insufficienti per generare la tabella.</span>';
+        return;
+      }
+
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const GIORNI_SETT_COMPLETI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+      const reperibilita = [];
+      const header = datiTabella[0];
+
+      const mappaNomi = {
+        "MACA": "MACALUSO",
+        "DINO": "DINOLFO",
+        "NAPO": "NAPOLI",
+        "VENTI": "VENTIMIGLIA"
+      };
+      
+      // Itera sugli operatori (saltando la riga header)
+      for (let i = 1; i < datiTabella.length; i++) {
+        const nomeAbbreviato = (datiTabella[i][0] || '').toUpperCase().substring(0, 4);
+        const operatore = mappaNomi[nomeAbbreviato] || datiTabella[i][0];
+        // Itera sui giorni (saltando la colonna nome operatore)
+        for (let j = 1; j < datiTabella[i].length; j++) {
+          // Normalizza la cella: maiuscole, niente spazi
+          const cella = String(datiTabella[i][j] || '').toUpperCase();
+          // Gestione robusta: cerca "REP" come valore singolo o tra più valori separati da / o spazi
+          const valori = cella.split(/[\/]/).map(v => v.trim());
+          if (valori.some(v => v === 'REP')) {
+            const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+            if (giornoMatch) {
+              const giorno = parseInt(giornoMatch[1], 10);
+              const data = new Date(anno, mese - 1, giorno);
+              reperibilita.push({
+                data: data,
+                giornoSett: GIORNI_SETT_COMPLETI[data.getDay()],
+                operatore: operatore
+              });
+            }
+          }
+        }
+      }
+
+      // Ordina per data
+      reperibilita.sort((a, b) => a.data - b.data);
+
+      if (reperibilita.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#555;font-style:italic;">Nessuna reperibilità trovata per ${NOMI_MESI[mese-1]} ${anno}.</p>`;
+      } else {
+        // Header personalizzato
+        let html = `<h3 style='color:#b80000;text-align:center;margin-bottom:0.2em;font-size:1.25em;letter-spacing:1px;'>REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`;
+        html += `<div style="display:flex;justify-content:center;gap:18px;margin-bottom:1em;">
+          <button onclick="esportaReperibilitaPDF()" style="background:#b80000;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta PDF</button>
+          <button onclick="esportaReperibilitaExcel()" style="background:#176d1a;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta Excel</button>
+          <button onclick="chiudiTabellaReperibilita()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Chiudi</button>
+        </div>`;
+        // Funzione per chiudere la tabella reperibilità
+        window.chiudiTabellaReperibilita = function() {
+          const container = document.getElementById('reperibilita-container');
+          if (container) container.innerHTML = '';
+        };
+        html += `<table id="tabella-reperibilita-stampabile" style="width:60%;margin:0 auto 1.5em auto;font-size:1.08em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;">
+          <tr style="background:#222d3b;color:#fff;font-size:1.08em;">
+            <th style='padding:10px 0;min-width:120px;background:#222d3b;'>Data &amp; Giorno</th>
+            <th style='padding:10px 0;min-width:140px;background:#222d3b;'>TSRM</th>
+          </tr>`;
+        // Calcolo festività
+        const pasqua = getPasqua(anno);
+        reperibilita.forEach(rep => {
+          const giornoSettimana = rep.giornoSett.charAt(0).toUpperCase() + rep.giornoSett.slice(1,3);
+          let operatore = rep.operatore.replace('VENTI', 'VENTIMIGLIA');
+          const data = rep.data;
+          const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+          const coloreData = isFestivo ? '#b80000' : '#111';
+          const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+          html += `<tr style="background:#fff;">
+            <td style='padding:8px 0;font-weight:bold;color:${coloreData};'>${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})} <span style='color:${coloreGiorno};font-size:0.98em;font-weight:normal;'>(${giornoSettimana})</span></td>
+            <td style='padding:8px 0;font-weight:bold;color:#0a2377;'>${operatore.replace('VENTI', 'VENTIMIGLIA')}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+
+        // Aggiunta numeri di telefono
+        html += `<div style="width:70%;margin:1.5em auto;padding:1em;background-color:#f4f8fb;border:1px solid #e0e7ef;border-radius:8px;text-align:center;">
+          <h4 style="margin-top:0;color:#2a4d7a;">Contatti</h4>
+          <p style="margin:0.5em 0;font-size:0.95em;"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+          <p style="margin:0.5em 0;font-size:0.95em;"><strong>MACALUSO:</strong> 329 7332321</p>
+          <p style="margin:0.5em 0;font-size:0.95em;"><strong>DINOLFO:</strong> 392 6817053</p>
+          <p style="margin:0.5em 0;font-size:0.95em;"><strong>NAPOLI:</strong> 333 4745282</p>
+        </div>`;
+
+        container.innerHTML = html;
+
+        // Funzione esporta PDF
+        window.esportaReperibilitaPDF = function() {
+          const tabella = document.getElementById('tabella-reperibilita-stampabile');
+          if (!tabella) return alert('Tabella non trovata!');
+          const win = window.open('', '', 'width=900,height=700');
+          win.document.write('<html><head><title>Reperibilità Vascolare</title>');
+          win.document.write('<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;font-size:1.08em;}th,td{border:1px solid #b0b0b0;padding:8px;text-align:center;}th{background:#222d3b;color:#fff;}tr:nth-child(even){background:#f4f8fb;}</style>');
+          win.document.write('</head><body>');
+          // Titolo con accento
+          win.document.write(`<h3 style=\'color:#b80000;text-align:center;margin-bottom:0.2em;font-size:1.25em;letter-spacing:1px;\'>REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`);
+          // Ricostruisco la tabella con colorazione festivi
+          const pasqua = getPasqua(anno);
+          let html = `<table style=\'width:70%;margin:0 auto 1.5em auto;font-size:1.08em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;\'>`;
+          html += `<tr style=\'background:#222d3b;color:#fff;font-size:1.08em;\'><th style=\'padding:10px 0;min-width:120px;background:#222d3b;\'>Data &amp; Giorno</th><th style=\'padding:10px 0;min-width:140px;background:#222d3b;\'>TSRM</th></tr>`;
+          reperibilita.forEach(rep => {
+            const giornoSettimana = rep.giornoSett.charAt(0).toUpperCase() + rep.giornoSett.slice(1, 3);
+            let operatore = rep.operatore.replace('VENTI', 'VENTIMIGLIA');
+            const data = rep.data;
+            const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+            const coloreData = isFestivo ? '#b80000' : '#111';
+            const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+            html += `<tr style=\'background:#fff;\'><td style=\'padding:8px 0;font-weight:bold;color:${coloreData};\'>${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})} <span style=\'color:${coloreGiorno};font-size:0.98em;font-weight:normal;\'>(${giornoSettimana})</span></td><td style=\'padding:8px 0;font-weight:bold;color:#0a2377;\'>${operatore.replace('VENTI', 'VENTIMIGLIA')}</td></tr>`;
+          });
+          html += `</table>`;
+          html += `<div style="width:60%;margin:1em auto;padding:1em;background-color:#f4f8fb;border:1px solid #e0e7ef;border-radius:8px;text-align:center;">
+            <h4 style="margin-top:0;color:#2a4d7a;">Contatti</h4>
+            <p style="margin:0.5em 0;font-size:0.95em;"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+            <p style="margin:0.5em 0;font-size:0.95em;"><strong>MACALUSO:</strong> 329 7332321</p>
+            <p style="margin:0.5em 0;font-size:0.95em;"><strong>DINOLFO:</strong> 392 6817053</p>
+            <p style="margin:0.5em 0;font-size:0.95em;"><strong>NAPOLI:</strong> 333 4745282</p>
+          </div>`;
+          win.document.write(html);
+          win.document.write('</body></html>');
+          win.document.close();
+          setTimeout(()=>{win.print();},400);
+        };
+
+        // Funzione esporta Excel
+        window.esportaReperibilitaExcel = function() {
+          // Ricostruisco la tabella per l'export senza la scritta [FESTIVO]
+          let csv = 'REPERIBILITÀ VASCOLARE MESE ' + NOMI_MESI[mese-1].toUpperCase() + ' ' + anno + '\n"Data & Giorno","TSRM"\n';
+          reperibilita.forEach(rep => {
+            const giornoSettimana = rep.giornoSett.charAt(0).toUpperCase() + rep.giornoSett.slice(1,3);
+            let operatore = rep.operatore.replace('VENTI', 'VENTIMIGLIA');
+            const data = rep.data;
+            let dataLabel = data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' (' + giornoSettimana + ')';
+            csv += '"' + dataLabel.replace(/"/g,'""') + '","' + operatore.replace('VENTI', 'VENTIMIGLIA').replace(/"/g,'""') + '"\n';
+          });
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Reperibilita_${NOMI_MESI[mese-1]}_${anno}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);}, 500);
+        };
+      }
+    }
+
+  // Salva anche in localStorage per persistenza tra sessioni
+  function salvaStatoInLocalStorage() {
+    if (!meseCorrente || !annoCorrente) return;
+    const cacheKey = `stato_turni_${annoCorrente}-${meseCorrente}`;
+    // Save the current state object to localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(currentSelections));
+  }
+
+    // --- NUOVA FUNZIONE TABELLA UNIFICATA ---
+    function generaTabellaUnificata(mese, anno) {
+      window.generaTabellaUnificata = generaTabellaUnificata;
+      const container = document.getElementById('reperibilita-container'); // Usa lo stesso container per coerenza
+      container.innerHTML = `<p style="text-align:center;color:#008B8B;font-weight:bold;">Generazione tabella Turni e Reperibilità in corso...</p>`;
+      const datiTabella = window.datiTabellaCorrente;
+
+      if (!datiTabella || !mese || !anno) {
+        container.innerHTML = '<span style="color:#dc3545;font-weight:bold;">Dati insufficienti per generare la tabella.</span>';
+        return;
+      }
+
+      const NOMI_MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+      const GIORNI_SETT_COMPLETI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+      const giorniDelMese = {};
+      const header = datiTabella[0];
+      const mappaNomi = { "MACA": "MACALUSO", "DINO": "DINOLFO", "NAPO": "NAPOLI", "VENTI": "VENTIMIGLIA" };
+
+      // 1. Inizializza l'oggetto per ogni giorno del mese
+      for (let d = 1; d <= new Date(anno, mese, 0).getDate(); d++) {
+        const data = new Date(anno, mese - 1, d);
+        giorniDelMese[d] = {
+          data: data,
+          giornoSett: GIORNI_SETT_COMPLETI[data.getDay()],
+          mattina: '',
+          pomeriggio: '',
+          notte: ''
+        };
+      }
+
+      for (let i = 1; i < datiTabella.length; i++) { // Itera sugli operatori
+          const nomeAbbreviato = (datiTabella[i][0] || '').toUpperCase().substring(0, 4);
+          const operatore = mappaNomi[nomeAbbreviato] || datiTabella[i][0];
+
+          for (let j = 1; j < datiTabella[i].length; j++) { // Itera sui giorni
+              const giornoMatch = String(header[j] || '').match(/^(\d{1,2})/);
+              if (!giornoMatch) continue;
+              const giorno = parseInt(giornoMatch[1], 10);
+              const dataGiorno = giorniDelMese[giorno].data;
+
+              const cellContent = String(datiTabella[i][j] || '');
+              const shifts = cellContent.split(' / ').map(s => s.trim());
+
+              for (const shift of shifts) {
+                  if (shift.includes('VA<small style="color:blue;">(M)</small>')) {
+                      giorniDelMese[giorno].mattina = operatore;
+                  }
+                  else if (shift.includes('VA<small style="color:orange;">(P)</small>')) {
+                      giorniDelMese[giorno].pomeriggio = operatore;
+                  }
+                  else if (shift === 'PRO') {
+                      giorniDelMese[giorno].pomeriggio = `${operatore}<br><small>(PROGETTO)</small>`;
+                  }
+                  else if (shift === 'REP') {
+                      if (dataGiorno.getDay() === 6) { // Sabato
+                          giorniDelMese[giorno].pomeriggio = `${operatore}<br><small style="color:red;">(REPERIBILE)</small>`;
+                      }
+                      giorniDelMese[giorno].notte = operatore;
+                  }
+              }
+          }
+      }
+
+      // 3. Costruisci l'HTML
+      let html = `<h3 style='color:#008B8B;text-align:center;margin-bottom:0.2em;font-size:1.25em;letter-spacing:1px;'>TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`;
+        html += `<div style="display:flex;justify-content:center;gap:18px;margin-bottom:1em;">
+          <button onclick="esportaTabellaUnificataPDF()" style="background:#b80000;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta PDF</button>
+          <button onclick="esportaTabellaUnificataExcel()" style="background:#176d1a;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Esporta Excel</button>
+          <button onclick="chiudiTabellaUnificata()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;cursor:pointer;">Chiudi</button>
+        </div>`;
+        
+        window.chiudiTabellaUnificata = function() {
+          const container = document.getElementById('reperibilita-container');
+          if (container) container.innerHTML = '';
+        };
+
+        html += `<table id="tabella-unificata-stampabile" style="width:85%;margin:0 auto 1.5em auto;font-size:1.05em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;">
+          <tr style="background:#005f5f;color:#fff;font-size:1.05em;">
+            <th style='padding:10px 5px;width:130px;background:#005f5f;'>Data &amp; Giorno</th>
+            <th style='padding:10px 5px;background:#005f5f;'>TSRM Mattina</th>
+            <th style='padding:10px 5px;background:#005f5f;'>TSRM Pomeriggio</th>
+            <th style='padding:10px 5px;background:#005f5f;'>TSRM Notte (REPE)</th>
+          </tr>`;
+        
+        const pasqua = getPasqua(anno);
+        Object.values(giorniDelMese).forEach(turno => {
+          const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+          const data = turno.data;
+          const isFestivo = data.getDay() === 0 || isHoliday(data, pasqua);
+          const coloreData = isFestivo ? '#b80000' : '#111';
+          const coloreGiorno = isFestivo ? '#b80000' : '#2a4d7a';
+          html += `<tr style="background:#fff;">
+            <td style='padding:8px 5px;font-weight:bold;color:${coloreData};'>${data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} <span style='color:${coloreGiorno};font-size:0.95em;font-weight:normal;'>(${giornoSettimana})</span></td>
+            <td style='padding:8px 5px;font-weight:bold;color:#0a2377;'>${(turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+            <td style='padding:8px 5px;font-weight:bold;color:${(turno.pomeriggio || '').includes('PROGETTO') ? '#006b2e' : ((turno.pomeriggio || '').includes('REPERIBILE') ? '#b80000' : '#0a2377')};'>${(turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+            <td style='padding:8px 5px;font-weight:bold;color:#b80000;'>${(turno.notte || '-').replace('VENTI', 'VENTIMIGLIA')}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+
+        // Aggiunta numeri di telefono (stile migliorato)
+        html += `<div style="width:85%;margin:1.5em auto;padding:1em;background-color:#f4f8fb;border:1px solid #e0e7ef;border-radius:8px;">
+          <h4 style="margin-top:0;color:#2a4d7a;text-align:center;margin-bottom:1em;">Contatti</h4>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:1em 2em;font-size:0.95em;text-align:center;">
+            <p style="margin:0;"><strong>VENTIMIGLIA:</strong> 389 5570239</p>
+            <p style="margin:0;"><strong>MACALUSO:</strong> 329 7332321</p>
+            <p style="margin:0;"><strong>DINOLFO:</strong> 392 6817053</p>
+            <p style="margin:0;"><strong>NAPOLI:</strong> 333 4745282</p>
+          </div>
+        </div>`;
+
+        container.innerHTML = html;
+
+        window.esportaTabellaUnificataPDF = function() {
+          const tabella = document.getElementById('tabella-unificata-stampabile');
+          if (!tabella) return alert('Tabella non trovata!');
+          const win = window.open('', '', 'width=900,height=700');
+          win.document.write('<html><head><title>Turni e Reperibilità Vascolare</title>');
+          win.document.write('<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;font-size:1.05em;}th,td{border:1px solid #b0b0b0;padding:8px;text-align:center;}th{background:#005f5f;color:#fff;}tr:nth-child(even){background:#f4f8fb;}</style>');
+          win.document.write('</head><body>');
+          win.document.write(`<h3 style='color:#008B8B;text-align:center;margin-bottom:0.2em;font-size:1.25em;letter-spacing:1px;'>TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}</h3>`);
+          win.document.write(tabella.outerHTML.replace(/VENTI/g, 'VENTIMIGLIA'));
+          // Aggiungi contatti al PDF
+          win.document.write(document.querySelector('#reperibilita-container > div:last-of-type').outerHTML);
+          win.document.write('</body></html>');
+          win.document.close();
+          setTimeout(()=>{win.print();},400);
+        };
+
+        window.esportaTabellaUnificataExcel = function() {
+          let csv = `TURNI E REPERIBILITÀ VASCOLARE MESE ${NOMI_MESI[mese-1].toUpperCase()} ${anno}\n"Data & Giorno","TSRM Mattina","TSRM Pomeriggio","TSRM Notte (REPE)"\n`;
+          Object.values(giorniDelMese).forEach(turno => {
+            const giornoSettimana = turno.giornoSett.charAt(0).toUpperCase() + turno.giornoSett.slice(1,3);
+            const dataLabel = turno.data.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}) + ' (' + giornoSettimana + ')';
+            const mattina = (turno.mattina || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const pomeriggio = (turno.pomeriggio || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            const notte = (turno.notte || '-').replace('VENTI', 'VENTIMIGLIA').replace(/<[^>]*>/g, '');
+            csv += `"${dataLabel.replace(/"/g,'""')}","${mattina.replace(/"/g,'""')}","${pomeriggio.replace(/"/g,'""')}","${notte.replace(/"/g,'""')}"\n`;
+          });
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Turni_e_REPE_${NOMI_MESI[mese-1]}_${anno}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);}, 500);
+        };
+    }
+
+  </script>
+  <script>
+  // Stub globale per evitare ReferenceError se la funzione non è definita altrove
+  window.caricaListaArchivio = window.caricaListaArchivio || function(){};
+  // Feedback visivo se la tabella progetti non viene generata
+  if (!window.generaTabellaProgetto) {
+    const btns = document.querySelectorAll('button[onclick*="generaTabellaProgetto"]');
+    btns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        alert('Funzione generaTabellaProgetto non disponibile!');
+      });
+    });
+  }
   </script>
 </body>
 </html>
+
