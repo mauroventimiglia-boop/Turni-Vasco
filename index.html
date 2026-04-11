@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
@@ -97,7 +96,7 @@
         const data = new Date(anno, mese - 1, t.giorno);
         const isF = data.getDay() === 0;
         const labelG = t.giorno + " " + ["D","L","M","M","G","V","S"][data.getDay()];
-                
+
         html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
         NOMI.forEach(nome => {
           html += `<td><div class="turno-container">`;
@@ -1840,3 +1839,4 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
   </script>
 </body>
 </html>
+
