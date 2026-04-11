@@ -1069,10 +1069,10 @@
       feedback.style.color = '#007bff';
       feedback.textContent = 'Salvataggio in corso...';
 
-      fetch(APPSCRIPT_URL + '?action=salvaTabellaSemplificata', {
+      fetch(APPSCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mese, anno, tabella })
+        body: JSON.stringify({ action: 'salvaTabellaSemplificata', mese, anno, tabella })
       })
       .then(() => {
         feedback.style.backgroundColor = '#d4edda';
@@ -1258,10 +1258,10 @@
                 document.getElementById('progetto-anno').value = anno;
                 document.getElementById('progetto-feedback').style.display = 'none';
                 // Recupera dati già inseriti per quel giorno/operatore/mese/anno (array di procedure)
-                fetch(APPSCRIPT_URL + '?action=getDatiProgetto', {
+                fetch(APPSCRIPT_URL, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ giorno, operatore, mese, anno })
+                  body: JSON.stringify({ action: 'getDatiProgetto', giorno, operatore, mese, anno })
                 })
                 .then(r => r.json())
                 .then(dati => {
@@ -1389,10 +1389,10 @@
                   cartella: div.querySelector('.progetto-cartella').value
                 })).filter(p => p.tipoProcedura || p.paziente || p.cartella);
                 // Salva oggetto con orario globale e array di procedure
-                fetch(APPSCRIPT_URL + '?action=salvaDatiProgetto', {
+                fetch(APPSCRIPT_URL, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure})
+                  body: JSON.stringify({ action: 'salvaDatiProgetto', giorno, operatore, mese, anno, oraInizioGlobale, oraFineGlobale, procedure })
                 })
                 .then(() => {
                   document.getElementById('progetto-feedback').style.display = 'block';
