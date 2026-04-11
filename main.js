@@ -17,14 +17,41 @@ window.caricaTurni = function caricaTurni() {
         if (output) output.innerHTML = `<span style='color:#b80000;font-weight:bold;'>Nessun turno trovato per il mese selezionato.</span>`;
         return;
       }
-      let html = `<table style='margin:0 auto 1.5em auto;font-size:1.05em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;'>`;
+
+      // Definisci gli operatori (puoi modificarli o recuperarli dinamicamente se necessario)
+      const operatori = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
+      const opzioniTurno = ["", "Mattina", "Pomeriggio", "Notte"];
+
+      let html = `<table class='table-container' style='margin:0 auto 1.5em auto;font-size:1.05em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;'>`;
       html += `<tr style='background:#eaf2fa;color:#1a2a3a;'>`+
-        `<th>Giorno</th>`+
-        `</tr>`;
+        `<th>Giorno</th>`;
+      operatori.forEach(op => {
+        html += `<th colspan='3'>${op}</th>`;
+      });
+      html += `</tr>`;
+      html += `<tr style='background:#eaf2fa;color:#1a2a3a;'>`+
+        `<th></th>`;
+      operatori.forEach(() => {
+        html += `<th>Mattina</th><th>Pomeriggio</th><th>Notte</th>`;
+      });
+      html += `</tr>`;
+
       dati.data.forEach(row => {
         html += `<tr style='background:#f7fafc;'>`+
-          `<td>${row.giorno}</td>`+
-        `</tr>`;
+          `<td>${row.giorno}</td>`;
+        operatori.forEach((op) => {
+          ["Mattina", "Pomeriggio", "Notte"].forEach((fascia) => {
+            // Trova il turno assegnato per questo giorno, operatore e fascia
+            let valoreTurno = "";
+            if (row.turni && row.turni[op] && row.turni[op][fascia]) {
+              valoreTurno = row.turni[op][fascia];
+            }
+            html += `<td><select name="turno_${row.giorno}_${op}_${fascia}" style="min-width:70px;">` +
+              opzioniTurno.map(opt => `<option value='${opt}'${valoreTurno === opt ? ' selected' : ''}>${opt}</option>`).join("") +
+            `</select></td>`;
+          });
+        });
+        html += `</tr>`;
       });
       html += `</table>`;
       if (output) output.innerHTML = html;
@@ -149,3 +176,4 @@ if (!window.generaTabellaProgetto) {
 }
 
 // ...altro codice JS...
+
