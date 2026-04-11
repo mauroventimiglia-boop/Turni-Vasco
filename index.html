@@ -1219,35 +1219,7 @@
             document.getElementById('archivio-preview').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
           }
         });
-                <input type='hidden' id='progetto-operatore'>
-                <input type='hidden' id='progetto-mese'>
-                <input type='hidden' id='progetto-anno'>
-                <div style='display:flex;flex-direction:row;gap:8px;align-items:flex-end;'>
-                  <label style='flex:1;display:flex;flex-direction:column;gap:2px;'>
-                    <span style="font-size:0.97em;font-weight:500;">Ora inizio globale</span>
-                    <input type='time' id='progetto-ora-inizio-globale' style='width:70px;min-width:50px;max-width:90px;' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
-                  </label>
-                  <label style='flex:1;display:flex;flex-direction:column;gap:2px;'>
-                    <span style="font-size:0.97em;font-weight:500;">Ora fine globale</span>
-                    <input type='time' id='progetto-ora-fine-globale' style='width:70px;min-width:50px;max-width:90px;' onchange='calcolaTotOreGlobale()' oninput='calcolaTotOreGlobale()'>
-                  </label>
-                  <div style='flex:0.7;display:flex;flex-direction:column;gap:2px;max-width:50px;'>
-                    <span style="font-size:0.97em;font-weight:500;">Tot ore</span>
-                    <input type='text' id='progetto-tot-ore-globale' style='width:38px;min-width:28px;max-width:50px;background:#f4f8fb;text-align:center;font-size:0.98em;' readonly>
-                  </div>
-                </div>
-                <div id='progetto-procedure-list' style='display:flex;flex-direction:column;gap:12px;'></div>
-                <div style="display:flex;flex-direction:row;gap:10px;align-items:center;justify-content:flex-start;">
-                  <button type='button' onclick='aggiungiProceduraProgetto()' style='background:#007bff;color:#fff;padding:4px 14px;border:none;border-radius:4px;font-size:1em;'>Aggiungi procedura</button>
-                </div>
-                <div style="display:flex;flex-direction:row;gap:12px;justify-content:flex-end;align-items:center;margin-top:8px;">
-                  <button type='button' onclick='salvaDatiProgetto()' style='background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;'>Conferma/Chiudi</button>
-                  <button type='button' onclick='chiudiFormProgetto()' style='background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;'>Annulla</button>
-                </div>
-              </form>
-              <span id='progetto-feedback' style='display:none;margin-top:1em;'></span>
-            </div>
-          </div>`;
+        // ...existing code...
               // Funzioni per popup progetto GLOBALI
               window.apriFormProgetto = function(giorno, operatore, mese, anno) {
                 const popup = document.getElementById('form-progetto-popup');
@@ -1852,3 +1824,4 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
   </script>
 </body>
 </html>
+
