@@ -3,128 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Turni TSRM</title>
+    <title>Gestione Turni Pro</title>
     <style>
         :root {
             --bg-va: #b3d1ff; --text-va: #0a2377;
             --bg-pro: #b6ffd0; --text-pro: #006b2e;
             --bg-rep: #ffd6d6; --text-rep: #b80000;
             --bg-f: #e2e3e5;   --text-f: #444;
+            --bg-rr: #e040fb;  --text-rr: #ffffff;
         }
-        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f7f6; font-size: 14px; }
-        .header { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f7f6; font-size: 13px; }
+        .header-controls { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
         
         table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
-        th, td { border: 1px solid #ddd; padding: 4px; text-align: center; overflow: hidden; }
-        
-        /* Intestazioni */
-        th { background: #eee; font-size: 12px; height: 40px; }
-        .col-giorno { width: 45px; }
+        th, td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+        th { background: #f8f9fa; font-size: 11px; }
+        .col-giorno { width: 40px; }
 
-        /* Celle Turni: Disposizione Verticale (M, P, N) */
         .turno-container { display: flex; flex-direction: column; gap: 2px; }
-        
-        select { 
-            width: 100%; border: 1px solid #ccc; border-radius: 3px; 
-            font-size: 12px; height: 26px; appearance: none; text-align-last: center;
-        }
+        select { width: 100%; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; height: 24px; text-align-last: center; }
 
-        /* Colori dinamici */
-        .sel-VA { background: var(--bg-va) !important; color: var(--text-va); font-weight: bold; }
-        .sel-PRO { background: var(--bg-pro) !important; color: var(--text-pro); font-weight: bold; }
-        .sel-REP { background: var(--bg-rep) !important; color: var(--text-rep); font-weight: bold; }
-        .sel-F, .sel-RC { background: var(--bg-f) !important; color: var(--text-f); }
+        /* Classi Colori */
+        .sel-VA { background: var(--bg-va); color: var(--text-va); font-weight: bold; }
+        .sel-PRO { background: var(--bg-pro); color: var(--text-pro); font-weight: bold; }
+        .sel-REP { background: var(--bg-rep); color: var(--text-rep); font-weight: bold; }
+        .sel-F, .sel-RC { background: var(--bg-f); color: var(--text-f); }
+        .sel-RR { background: var(--bg-rr); color: var(--text-rr); }
 
         .festivo { background: #ffebee; }
         .festivo td:first-child { color: red; font-weight: bold; }
 
-        button { padding: 8px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; margin: 2px; }
-        .btn-load { background: #007bff; color: white; }
-        .btn-save { background: #28a745; color: white; }
+        .btn-group { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+        button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; font-size: 12px; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        .btn-orange { background: #fd7e14; color: white; }
+        
+        #legenda-operatori { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .card-legenda { background: white; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        .card-legenda h4 { margin: 0 0 5px 0; border-bottom: 1px solid #eee; }
+        .stat-item { font-size: 11px; color: #555; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <strong>Mese:</strong> <input type="number" id="mese" value="4" style="width:40px">
-        <strong>Anno:</strong> <input type="number" id="anno" value="2026" style="width:60px">
-        <br><br>
-        <button class="btn-load" onclick="caricaTurni()">Carica</button>
-        <button class="btn-save" onclick="salvaTurniManuale()">Salva 💾</button>
+    <div class="header-controls">
+        <strong>Mese:</strong> <input type="number" id="mese" style="width:40px">
+        <strong>Anno:</strong> <input type="number" id="anno" style="width:60px">
+        <div class="btn-group">
+            <button class="btn-blue" onclick="caricaTurni()">Carica</button>
+            <button class="btn-green" onclick="salvaTurniManuale()">Salva 💾</button>
+            <button class="btn-orange" onclick="generaAnteprimaBackup()">Backup/Anteprima</button>
+        </div>
         <span id="feedback"></span>
     </div>
 
     <div id="output"></div>
+    <div id="legenda-operatori"></div>
+    <div id="preview-container"></div>
 
     <script>
-        const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbygfswYatsxqiZrZoVDDZzo20XolahNbEyaUg9Zq0wp9jxSt-0ltxyL2nzYirgnoBJ-KQ/exec"; 
+        const APPSCRIPT_URL = "IL_TUO_URL_QUI"; 
         const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
         let currentSelections = {};
-
+        let currentTurniData = [];
 
         async function caricaTurni() {
             const m = document.getElementById('mese').value;
             const a = document.getElementById('anno').value;
-            const out = document.getElementById('output');
-            out.innerHTML = "Caricamento...";
-
+            document.getElementById('output').innerHTML = "Caricamento...";
             try {
                 const r = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a}`);
                 const j = await r.json();
                 const stato = j.ok ? j.stato : {};
+                currentSelections = stato;
 
-                // Generiamo i giorni (30 o 31)
-                const giorniInMese = new Date(a, m, 0).getDate();
-                let html = `<table><tr><th class="col-giorno">Giorno</th>`;
-                NOMI.forEach(n => html += `<th>${n.substring(0,4)}</th>`);
-                html += `</tr>`;
+                const r2 = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${m}&anno=${a}`);
+                const j2 = await r2.json();
+                currentTurniData = j2.data || [];
+                mostraTabella(currentTurniData, m, a, stato);
+            } catch(e) { document.getElementById('output').innerHTML = "Errore di connessione!"; }
+        }
 
-                for(let g=1; g<=giorniInMese; g++) {
-                    const data = new Date(a, m-1, g);
-                    const isF = data.getDay() === 0;
-                    const labelG = g + " " + ["D","L","M","M","G","V","S"][data.getDay()];
+        function mostraTabella(turni, mese, anno, stato) {
+            let html = `<table><tr><th class="col-giorno">Giorno</th>`;
+            NOMI.forEach(n => html += `<th>${n.substring(0,4)}</th>`);
+            html += `</tr>`;
 
-                    html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
+            turni.forEach(t => {
+                const data = new Date(anno, mese - 1, t.giorno);
+                const isF = data.getDay() === 0;
+                const labelG = t.giorno + " " + ["D","L","M","M","G","V","S"][data.getDay()];
 
-                    NOMI.forEach(n => {
-                        html += `<td><div class="turno-container">`;
-                        // Creiamo 3 select per cella: Mattina, Pomeriggio, Notte
-                        ['m','p','n'].forEach(f => {
-                            const id = `${f}_${g}_${n}`;
-                            const val = stato[id] || "";
-                            html += `<select id="${id}" class="sel-${val}" onchange="updateStyle(this)">
-                                        ${getOptions(val)}
-                                     </select>`;
-                        });
-                        html += `</div></td>`;
+                html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
+                NOMI.forEach(nome => {
+                    html += `<td><div class="turno-container">`;
+                    const fasce = isF ? ['festivo'] : ['m', 'p', 'n'];
+                    fasce.forEach(f => {
+                        const id = `${f}_${t.giorno}_${nome}`;
+                        const val = stato[id] || "";
+                        html += `<select id="${id}" class="sel-${val}" onchange="updateVal(this)">${getOptions(val)}</select>`;
                     });
-                    html += `</tr>`;
-                }
-                out.innerHTML = html + `</table>`;
-            } catch(e) { out.innerHTML = "Errore connessione!"; }
+                    html += `</div></td>`;
+                });
+                html += `</tr>`;
+            });
+            document.getElementById('output').innerHTML = html + `</table>`;
+            aggiornaLegenda();
         }
 
-
-        function getOptions(selected) {
-            const opt = ["", "1", "2", "VA", "PRO", "REP", "F", "RC"];
-            return opt.map(o => `<option value="${o}" ${o===selected?'selected':''}>${o||'-'}</option>`).join('');
+        function getOptions(val) {
+            const opts = ["", "1", "2", "VA", "PRO", "REP", "F", "RC", "RR"];
+            return opts.map(o => `<option value="${o}" ${o===val?'selected':''}>${o||'-'}</option>`).join('');
         }
 
-
-        function updateStyle(s) {
+        function updateVal(s) {
             s.className = `sel-${s.value}`;
             currentSelections[s.id] = s.value;
+            aggiornaLegenda();
+        }
+
+        function aggiornaLegenda() {
+            let html = "";
+            NOMI.forEach(n => {
+                const count = (val) => Object.entries(currentSelections).filter(([id, v]) => id.endsWith(n) && v === val).length;
+                html += `<div class="card-legenda">
+                    <h4>${n}</h4>
+                    <div class="stat-item">VA: ${count('VA')} | PRO: ${count('PRO')}</div>
+                    <div class="stat-item">REP: ${count('REP')} | RR: ${count('RR')}</div>
+                    <div class="stat-item">F/RC: ${count('F') + count('RC')}</div>
+                </div>`;
+            });
+            document.getElementById('legenda-operatori').innerHTML = html;
         }
 
         async function salvaTurniManuale() {
-            const f = document.getElementById('feedback');
-            f.textContent = "Salvataggio...";
-            
-            // Raccogliamo tutti i valori delle select
-            const selects = document.querySelectorAll('select');
-            const stato = {};
-            selects.forEach(s => { if(s.value) stato[s.id] = s.value; });
-
+            const fb = document.getElementById('feedback');
+            fb.textContent = "Salvataggio...";
             try {
                 await fetch(APPSCRIPT_URL, {
                     method: 'POST',
@@ -133,13 +148,30 @@
                         action: "salvaStatoTurni",
                         mese: document.getElementById('mese').value,
                         anno: document.getElementById('anno').value,
-                        stato: stato
+                        stato: currentSelections
                     })
                 });
-                f.textContent = " ✓ Salvato";
-                setTimeout(() => f.textContent = "", 2000);
-            } catch(e) { f.textContent = " Errore!"; }
+                fb.textContent = " ✓ Salvato";
+            } catch(e) { fb.textContent = " Errore!"; }
         }
+
+        // Funzione per Generare Anteprima/Backup (Semplificata)
+        function generaAnteprimaBackup() {
+            const out = document.getElementById('preview-container');
+            out.innerHTML = "<h3>Anteprima Backup Generata</h3><p>I dati sono pronti per essere inviati al foglio Archivio.</p><button class='btn-green' onclick='confermaSalvataggioBackup()'>Invia ad Archivio</button>";
+        }
+
+        async function confermaSalvataggioBackup() {
+            alert("Funzione di invio archivio chiamata correttamente.");
+            // Qui andrebbe la chiamata fetch specifica per action=salvaTabellaSemplificata
+        }
+
+        // Inizializzazione data odierna
+        window.onload = () => {
+            const d = new Date();
+            document.getElementById('mese').value = d.getMonth() + 1;
+            document.getElementById('anno').value = d.getFullYear();
+        };
     </script>
 </body>
 </html>
