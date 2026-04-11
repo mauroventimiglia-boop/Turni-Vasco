@@ -1487,7 +1487,7 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
         } else {
           document.getElementById('archivio-preview').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore: dati non trovati, foglio vuoto o nome non corrispondente!<br>Controlla che il foglio esista e si chiami esattamente: <b>' + nomeFoglio + '</b></span>';
         }
-      }).getDatiFoglio(nomeFoglio);
+      });
     }
 
     // Variabile globale per i dati della tabella: usare sempre window.datiTabellaCorrente
@@ -1823,4 +1823,3 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
   </script>
 </body>
 </html>
-
