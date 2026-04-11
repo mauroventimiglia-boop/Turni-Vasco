@@ -33,9 +33,9 @@
   <h2>Gestione Turni</h2>
   <label>Mese: <input type="number" id="mese" min="1" max="12"></label>
   <label>Anno: <input type="number" id="anno" min="2020" max="2100"></label>
-  <button onclick="caricaTurni()">Carica Turni</button>
-  <button id="pulisci-tabella-btn" onclick="pulisciTabella()" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
-  <button onclick="salvaTurniManuale()" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
+  <button id="carica-turni-btn">Carica Turni</button>
+  <button id="pulisci-tabella-btn" style="background-color:#dc3545; color:#fff;">Pulisci Turni Mese</button>
+  <button id="salva-turni-manuale-btn" style="background:linear-gradient(135deg,#b2f0d0,#7de8b0);color:#2e7d52;border:1px solid #a0e8c5;border-radius:5px;font-size:0.9em;padding:5px 14px;cursor:pointer;font-weight:600;">Salva Turni &#128190;</button>
   <span id="salva-turni-feedback" style="display:none;font-size:0.82em;font-weight:600;margin-left:6px;"></span>
   
   <!-- Popup di conferma personalizzato -->
@@ -58,25 +58,25 @@
                 <h3 style="color:#b80000;text-align:center;margin-top:0;margin-bottom:1em;font-size:1.15em;">Inserisci l'anno per le statistiche REPE</h3>
                 <input id="input-anno-repe" type="number" min="2020" max="2100" value="" placeholder="es: 2026" style="font-size:1.1em;padding:7px 12px;border-radius:6px;border:1px solid #bbb;width:120px;text-align:center;outline:none;">
                 <div style="margin-top:1.5em;display:flex;gap:16px;justify-content:center;width:100%;">
-                  <button onclick="confermaAnnoRepe()" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
-                  <button onclick="chiudiPopupAnnoRepe()" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
+                  <button id="conferma-anno-repe-btn" style="background:#176d1a;color:#fff;padding:7px 22px;border:none;border-radius:4px;font-size:1em;">Conferma</button>
+                  <button id="chiudi-popup-anno-repe-btn" style="background:#f8d7da;color:#b80000;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Annulla</button>
                 </div>
                 <span id="errore-anno-repe" style="display:none;color:#b80000;font-weight:bold;margin-top:1em;font-size:1em;"></span>
               </div>
             </div>
       <div id="legenda-header-row" style="position:relative;display:flex;align-items:center;justify-content:center;min-height:38px;">
         <h4 style="margin:0;color:#2a4d7a;text-align:center;width:100%;">Legenda Riepilogo</h4>
-        <button id="btn-aggiorna-legenda-mobile" type="button" onclick="aggiornaLegendaManuale()" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
+        <button id="btn-aggiorna-legenda-mobile" type="button" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);background:#ff9800;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.88em;font-weight:700;cursor:pointer;">Aggiorna</button>
       </div>
       <div id="legenda-feedback" style="display:none;text-align:center;font-size:0.85em;color:#b26a00;font-weight:600;margin:6px 0 0 0;">Legenda da aggiornare</div>
       <div id="legenda-operatori"></div>
-      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;" onclick="mostraStatisticheRepe()">Statistiche REPE annuali</button>
+      <button id="btn-statistiche-repe" class="save-btn" style="background-color:#b80000;margin-top:10px;width:100%;font-size:1em;">Statistiche REPE annuali</button>
       <div id="popup-statistiche-repe" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;align-items:center;justify-content:center;">
         <div style="background:#fff;padding:2em 1.5em;border-radius:10px;max-width:480px;width:98vw;box-shadow:0 2px 16px #0002;position:relative;">
           <h3 style="color:#b80000;text-align:center;margin-top:0;">Statistiche REPE annuali</h3>
           <div id="contenuto-statistiche-repe"></div>
           <div style="text-align:right;margin-top:1.5em;">
-            <button onclick="chiudiStatisticheRepe()" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
+            <button id="chiudi-statistiche-repe-btn" style="background:#6c757d;color:#fff;padding:7px 18px;border:none;border-radius:4px;font-size:1em;">Chiudi</button>
           </div>
         </div>
       </div>
@@ -84,10 +84,27 @@
   </div>
   <div id="preview-container"></div>
   <div id="progetto-backup-container" style="margin-top:2em;"></div>
-  <button class="save-btn" onclick="generaAnteprimaBackup()">Genera Anteprima Backup</button>
-  <button id="conferma-salvataggio-btn" class="save-btn" onclick="confermaSalvataggioBackup()" style="display: none; background-color: #28a745;">Conferma e Salva</button>
-  <button id="chiudi-anteprima-btn" class="save-btn" onclick="chiudiAnteprima()" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
-  <button class="save-btn" onclick="toggleArchivio()" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
+  <button id="genera-anteprima-backup-btn" class="save-btn">Genera Anteprima Backup</button>
+  <button id="conferma-salvataggio-btn" class="save-btn" style="display: none; background-color: #28a745;">Conferma e Salva</button>
+  <button id="chiudi-anteprima-btn" class="save-btn" style="display: none; background-color: #6c757d;">Chiudi Anteprima</button>
+  <button id="toggle-archivio-btn" class="save-btn" style="background-color: #6c757d;">Mostra/Nascondi Archivio</button>
+  <script>
+  // Binding eventi pulsanti principali dopo il caricamento del DOM
+  window.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('carica-turni-btn')?.addEventListener('click', window.caricaTurni);
+    document.getElementById('pulisci-tabella-btn')?.addEventListener('click', window.pulisciTabella);
+    document.getElementById('salva-turni-manuale-btn')?.addEventListener('click', window.salvaTurniManuale);
+    document.getElementById('conferma-anno-repe-btn')?.addEventListener('click', window.confermaAnnoRepe ?? confermaAnnoRepe);
+    document.getElementById('chiudi-popup-anno-repe-btn')?.addEventListener('click', window.chiudiPopupAnnoRepe ?? chiudiPopupAnnoRepe);
+    document.getElementById('btn-aggiorna-legenda-mobile')?.addEventListener('click', window.aggiornaLegendaManuale ?? aggiornaLegendaManuale);
+    document.getElementById('btn-statistiche-repe')?.addEventListener('click', window.mostraStatisticheRepe ?? mostraStatisticheRepe);
+    document.getElementById('chiudi-statistiche-repe-btn')?.addEventListener('click', window.chiudiStatisticheRepe ?? chiudiStatisticheRepe);
+    document.getElementById('genera-anteprima-backup-btn')?.addEventListener('click', window.generaAnteprimaBackup ?? generaAnteprimaBackup);
+    document.getElementById('conferma-salvataggio-btn')?.addEventListener('click', window.confermaSalvataggioBackup ?? confermaSalvataggioBackup);
+    document.getElementById('chiudi-anteprima-btn')?.addEventListener('click', window.chiudiAnteprima ?? chiudiAnteprima);
+    document.getElementById('toggle-archivio-btn')?.addEventListener('click', window.toggleArchivio ?? toggleArchivio);
+  });
+  </script>
   <div id="feedback-message"></div>
   <div id="archivio-container" style="display: none;">
     <h4>Archivio Turni Salvati</h4>
