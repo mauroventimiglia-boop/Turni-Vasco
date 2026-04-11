@@ -48,14 +48,14 @@
 <body>
 
   <div class="header-controls">
-    <strong>Mese:</strong> <input type="number" id="mese" style="width:40px">
-    <strong>Anno:</strong> <input type="number" id="anno" style="width:60px">
+    <strong>Mese:</strong> <input type="number" id="mese" min="1" max="12" style="width:40px">
+    <strong>Anno:</strong> <input type="number" id="anno" min="2020" max="2100" style="width:60px">
     <div class="btn-group">
       <button class="btn-blue" onclick="caricaTurni()">Carica</button>
       <button class="btn-green" onclick="salvaTurniManuale()">Salva 💾</button>
       <button class="btn-orange" onclick="generaAnteprimaBackup()">Backup/Anteprima</button>
     </div>
-    <span id="feedback"></span>
+    <span id="feedback" style="margin-left:10px;color:#b80000;font-weight:bold;"></span>
   </div>
 
   <div id="output"></div>
@@ -63,99 +63,82 @@
   <div id="preview-container"></div>
 
   <script>
-    const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzXGsfLWICNaQQRxXe11x-oYJPrr2Ok_jthCoHv0TEu_Xl6duVWpwmpSRVbe73MH5H7w/exec"; 
-    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-    let currentSelections = {};
-    let currentTurniData = [];
+        // Funzione centralizzata per feedback visivo
+        function setFeedback(msg, color = '#b80000', timeout = 2500) {
+          const el = document.getElementById('feedback');
+          if (!el) return;
+          el.textContent = msg;
+          el.style.color = color;
+          if (timeout > 0) setTimeout(() => { el.textContent = ''; }, timeout);
+        }
 
-    async function caricaTurni() {
-      const m = document.getElementById('mese').value;
-      const a = document.getElementById('anno').value;
-      document.getElementById('output').innerHTML = "Caricamento...";
-            
-      try {
-        const r = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a}`);
-        const j = await r.json();
-        const stato = j.ok ? j.stato : {};
-        currentSelections = stato;
-
-        const r2 = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${m}&anno=${a}`);
-        const j2 = await r2.json();
-        currentTurniData = j2.data || [];
-                
-        mostraTabella(currentTurniData, m, a, stato);
-      } catch(e) { document.getElementById('output').innerHTML = "Errore di connessione!"; }
-    }
-
-    function mostraTabella(turni, mese, anno, stato) {
-      let html = `<table><tr><th class="col-giorno">Giorno</th>`;
-      NOMI.forEach(n => html += `<th>${n.substring(0,4)}</th>`);
-      html += `</tr>`;
-
-      turni.forEach(t => {
-        const data = new Date(anno, mese - 1, t.giorno);
-        const isF = data.getDay() === 0;
-        const labelG = t.giorno + " " + ["D","L","M","M","G","V","S"][data.getDay()];
-
-        html += `<tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>`;
-        NOMI.forEach(nome => {
-          html += `<td><div class="turno-container">`;
-          const fasce = isF ? ['festivo'] : ['m', 'p', 'n'];
-          fasce.forEach(f => {
-            const id = `${f}_${t.giorno}_${nome}`;
-            const val = stato[id] || "";
-            html += `<select id="${id}" class="sel-${val}" onchange="updateVal(this)">${getOptions(val)}</select>`;
-          });
-          html += `</div></td>`;
+    // ...esistente: mantieni solo la versione moderna e centralizzata delle funzioni...
+    // Rendi globali le funzioni principali
+    // Versione aggiornata che usa feedback centralizzato
+    window.caricaTurni = function caricaTurni() {
+      const mese = document.getElementById('mese').value;
+      const anno = document.getElementById('anno').value;
+      if (!mese || mese < 1 || mese > 12 || !anno || anno < 2020 || anno > 2100) {
+        setFeedback('Mese o anno non validi!');
+        document.getElementById('output').innerHTML = '';
+        return;
+      }
+      setFeedback('Caricamento...', '#007bff', 0);
+      mostraLoader(true);
+      fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${encodeURIComponent(anno)}&mese=${encodeURIComponent(mese)}`)
+        .then(r => r.json())
+        .then(statoSalvato => {
+          fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${encodeURIComponent(mese)}&anno=${encodeURIComponent(anno)}`)
+            .then(r => r.json())
+            .then(turni => {
+              if (Array.isArray(turni) && turni.length > 0) {
+                currentTurniData = turni;
+                mostraTabella(turni, mese, anno, statoSalvato);
+                localStorage.setItem(`turni_${anno}-${mese}`, JSON.stringify({turni, stato: statoSalvato}));
+                setFeedback('Dati caricati', '#176d1a');
+              } else {
+                document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Nessun turno trovato per questo mese/anno.</span>';
+                setFeedback('Nessun turno trovato', '#b80000');
+              }
+              mostraLoader(false);
+            })
+            .catch(() => {
+              mostraLoader(false);
+              setFeedback('Errore nel caricamento dei turni!', '#b80000');
+            });
+        })
+        .catch(() => {
+          mostraLoader(false);
+          setFeedback('Errore nel recupero stato turni!', '#b80000');
         });
-        html += `</tr>`;
+    }
+
+    window.salvaTurniManuale = function salvaTurniManuale() {
+      const mese = Number(meseCorrente || document.getElementById('mese').value);
+      const anno = Number(annoCorrente || document.getElementById('anno').value);
+      if (!mese || !anno) {
+        setFeedback('Carica prima mese e anno.');
+        return;
+      }
+      clearTimeout(saveTimeout);
+      const statoDaSalvare = (currentSelections && typeof currentSelections === 'object') ? currentSelections : {};
+      setFeedback('Salvataggio...', '#007bff', 0);
+      fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anno, mese, stato: statoDaSalvare })
+      })
+      .then(() => {
+        salvaStatoInLocalStorage();
+        setFeedback('\u2713 Turni salvati', '#176d1a');
+      })
+      .catch(err => {
+        setFeedback('\u2717 errore: ' + (err && err.message ? err.message : err), '#b80000', 4000);
       });
-      document.getElementById('output').innerHTML = html + `</table>`;
-      aggiornaLegenda();
     }
-
-    function getOptions(val) {
-      const opts = ["", "1", "2", "VA", "PRO", "REP", "F", "RC", "RR"];
-      return opts.map(o => `<option value="${o}" ${o===val?'selected':''}>${o||'-'}</option>`).join('');
-    }
-
-    function updateVal(s) {
-      s.className = `sel-${s.value}`;
-      currentSelections[s.id] = s.value;
-      aggiornaLegenda();
-    }
-
-    function aggiornaLegenda() {
-      let html = "";
-      NOMI.forEach(n => {
-        const count = (val) => Object.entries(currentSelections).filter(([id, v]) => id.endsWith(n) && v === val).length;
-        html += `<div class="card-legenda">
-          <h4>${n}</h4>
-          <div class="stat-item">VA: ${count('VA')} | PRO: ${count('PRO')}</div>
-          <div class="stat-item">REP: ${count('REP')} | RR: ${count('RR')}</div>
-          <div class="stat-item">F/RC: ${count('F') + count('RC')}</div>
-        </div>`;
-      });
-      document.getElementById('legenda-operatori').innerHTML = html;
-    }
-
-    async function salvaTurniManuale() {
-      const fb = document.getElementById('feedback');
-      fb.textContent = "Salvataggio...";
-      try {
-        await fetch(APPSCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify({
-            action: "salvaStatoTurni",
-            mese: document.getElementById('mese').value,
-            anno: document.getElementById('anno').value,
-            stato: currentSelections
-          })
-        });
-        fb.textContent = " ✓ Salvato";
-      } catch(e) { fb.textContent = " Errore!"; }
-    }
+    window.pulisciTabella = pulisciTabella;
+    window.generaAnteprimaBackup = generaAnteprimaBackup;
+    window.confermaSalvataggioBackup = confermaSalvataggioBackup;
 
     // Funzione per Generare Anteprima/Backup (Semplificata)
     function generaAnteprimaBackup() {
@@ -195,421 +178,6 @@
                         const festivo = data && (day === 0 || isHoliday(data, getPasqua(meseObj.anno)));
                         if (festivo) ore = 24;
                         else if (day === 6) ore = 18;
-                        stats[nome].REP++;
-                        stats[nome]['REP ORE'] += ore;
-                        if (festivo) stats[nome]['REP FESTIVI']++;
-                        if (giorno <= 10) {
-                          if (day >= 1 && day <= 5) stats[nome]['REP PRIMI10_LV']++; // lun-ven
-                          if (day === 0 || day === 6) stats[nome]['REP PRIMI10_SD']++; // dom-sab
-                        }
-                      }
-                    }
-                  }
-                }
-              });
-              let html = `<div style="overflow-x:auto;"><table style="width:680px;min-width:600px;margin-top:1em;font-size:1.13em;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px #0001;table-layout:fixed;">`;
-              html += '<tr style="background:#e0e7ef;color:#16304d;">'
-                +'<th style="padding:10px 0;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;">TSRM</th>'
-                +'<th style="min-width:90px;">Totale REPE</th>'
-                +'<th style="min-width:90px;">Totale Ore</th>'
-                +'<th style="min-width:110px;">REPE Festività</th>'
-                +'<th style="min-width:140px;">REPE Primi 10g Lun-Ven</th>'
-                +'<th style="min-width:140px;">REPE Primi 10g Sab-Dom</th>'
-              +'</tr>';
-              NOMI.forEach(nome => {
-                html += `<tr>`
-                  +`<td style='color:#333;background:#f4f8fb;text-align:center;vertical-align:middle;min-width:120px;width:auto;white-space:nowrap;font-weight:normal;'>${nome}</td>`
-                  +`<td style='color:#b80000;text-align:center;'>${stats[nome].REP}</td>`
-                  +`<td style='color:#176d1a;text-align:center;'>${stats[nome]['REP ORE']}</td>`
-                  +`<td style='color:#b80000;text-align:center;'>${stats[nome]['REP FESTIVI']}</td>`
-                  +`<td style='color:#007bff;text-align:center;'>${stats[nome]['REP PRIMI10_LV']}</td>`
-                  +`<td style='color:#ff9800;text-align:center;'>${stats[nome]['REP PRIMI10_SD']}</td>`
-                +`</tr>`;
-              });
-              html += '</table></div>';
-              document.getElementById('contenuto-statistiche-repe').innerHTML = html;
-              document.getElementById('popup-statistiche-repe').style.display = 'flex';
-            })
-            .catch(err => {
-              mostraLoader(false);
-              document.getElementById('contenuto-statistiche-repe').innerHTML = '<span style="color:#b80000;font-weight:bold;">Errore nel recupero dati: '+(err && err.message ? err.message : err)+'</span>';
-              document.getElementById('popup-statistiche-repe').style.display = 'flex';
-            });
-        }
-
-        function chiudiStatisticheRepe() {
-          document.getElementById('popup-statistiche-repe').style.display = 'none';
-        }
-    const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-    const GIORNI_SETT = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-    // Mesi in cui RR è abilitato (giugno, luglio, agosto, settembre)
-    const MESI_RR = [6,7,8,9];
-    let datiBackupDaSalvare = null;
-
-    // --- Performance Optimization: Global State Management ---
-    let currentSelections = {}; // Object to hold the state of all select elements {id: value}
-    let currentTurniData = [];  // Array to hold the raw data for the current month's shifts
-    let meseCorrente, annoCorrente;
-
-    let saveTimeout = null; // Variabile per il timeout del salvataggio automatico
-    let localStorageSaveTimeout = null;
-    let legendaUpdateTimeout = null;
-    let legendaUpdateInFrame = false;
-    let legendaDirty = false;
-    let legendaFeedbackTimeout = null;
-    let orientationStabilizeTimeout = null;
-    let selectTransitionResumeTimeout = null;
-    let viewportChangeTimeout = null;
-    let ultimaOrientazione = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
-
-    function isLandscapeCompatta() {
-      return window.matchMedia('(orientation: landscape)').matches && window.innerHeight <= 500;
-    }
-
-    function isPortraitMobile() {
-      const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-      const isNarrow = window.innerWidth <= 1200;
-      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
-      return isPortrait && isNarrow && isTouch;
-    }
-
-    function isMobileDevice() {
-      const userAgent = (navigator.userAgent || '').toLowerCase();
-      const isMobileUA = /android|iphone|ipad|ipod|mobile/.test(userAgent);
-      const isTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
-      return isMobileUA || (isTouch && window.innerWidth <= 1024);
-    }
-
-    function aggiornaControlliLegendaMobile() {
-      const btn = document.getElementById('btn-aggiorna-legenda-mobile');
-      const feedback = document.getElementById('legenda-feedback');
-      if (!btn || !feedback) return;
-
-      if (isMobileDevice()) {
-        btn.style.display = 'inline-flex';
-        btn.style.alignItems = 'center';
-        btn.style.justifyContent = 'center';
-        btn.textContent = legendaDirty ? 'Aggiorna *' : 'Aggiorna';
-
-        if (legendaDirty) {
-          feedback.style.display = 'block';
-          feedback.style.color = '#b26a00';
-          feedback.textContent = 'Legenda da aggiornare';
-        }
-      } else {
-        btn.style.display = 'none';
-        feedback.style.display = 'none';
-      }
-    }
-
-    function segnalaLegendaDaAggiornare() {
-      legendaDirty = true;
-      aggiornaControlliLegendaMobile();
-    }
-
-    function segnalaModificheDaSalvare() {
-      if (!isMobileDevice()) return;
-      const feedback = document.getElementById('salva-turni-feedback');
-      if (!feedback) return;
-      feedback.style.display = 'inline';
-      feedback.style.color = '#b26a00';
-      feedback.textContent = 'Modifiche da salvare';
-    }
-
-    function aggiornaLegendaManuale() {
-      aggiornaLegenda();
-      const feedback = document.getElementById('legenda-feedback');
-      if (feedback && isMobileDevice()) {
-        clearTimeout(legendaFeedbackTimeout);
-        feedback.style.display = 'block';
-        feedback.style.color = '#176d1a';
-        feedback.textContent = '✓ Legenda aggiornata';
-        legendaFeedbackTimeout = setTimeout(() => {
-          if (!legendaDirty) feedback.style.display = 'none';
-        }, 1800);
-      }
-    }
-
-    function abbreviaGiorno(nomeGiorno) {
-      const base = (nomeGiorno || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-      if (base.startsWith('domen')) return 'Dom';
-      if (base.startsWith('lun')) return 'Lun';
-      if (base.startsWith('mar')) return 'Mar';
-      if (base.startsWith('merc')) return 'Mer';
-      if (base.startsWith('gio')) return 'Gio';
-      if (base.startsWith('ven')) return 'Ven';
-      if (base.startsWith('sab')) return 'Sab';
-      return (nomeGiorno || '').slice(0, 3);
-    }
-
-    function aggiornaEtichetteSettimanaResponsive() {
-      const abbreviate = isPortraitMobile();
-      document.querySelectorAll('#output td.giorno-sett').forEach(cell => {
-        const fullDay = cell.dataset.fullDay || cell.textContent.trim();
-        if (!cell.dataset.fullDay) cell.dataset.fullDay = fullDay;
-        cell.textContent = abbreviate ? abbreviaGiorno(fullDay) : fullDay;
-      });
-    }
-
-    function gestisciViewportChange() {
-      gestisciStabilizzazioneOrientamento();
-      aggiornaControlliLegendaMobile();
-      aggiornaEtichetteSettimanaResponsive();
-    }
-
-    function gestisciCambioViewportDebounced() {
-      const orientazioneCorrente = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
-      if (orientazioneCorrente === ultimaOrientazione && !isMobileDevice()) return;
-      ultimaOrientazione = orientazioneCorrente;
-      clearTimeout(viewportChangeTimeout);
-      viewportChangeTimeout = setTimeout(() => {
-        requestAnimationFrame(() => {
-          aggiornaEtichetteSettimanaResponsive();
-          aggiornaControlliLegendaMobile();
-          gestisciStabilizzazioneOrientamento();
-        });
-      }, isMobileDevice() ? 90 : 220);
-    }
-
-    function sospendiTransizioniSelect(ms) {
-      document.documentElement.style.setProperty('--select-transition', 'none');
-      clearTimeout(selectTransitionResumeTimeout);
-      selectTransitionResumeTimeout = setTimeout(() => {
-        document.documentElement.style.setProperty('--select-transition', 'background-color 0.3s, color 0.3s');
-      }, ms);
-    }
-
-    function gestisciStabilizzazioneOrientamento() {
-      if (isMobileDevice()) {
-        sospendiTransizioniSelect(180);
-        clearTimeout(orientationStabilizeTimeout);
-        orientationStabilizeTimeout = setTimeout(() => {
-          aggiornaControlliLegendaMobile();
-        }, 120);
-        return;
-      }
-
-      if (!isLandscapeCompatta()) {
-        aggiornaControlliLegendaMobile();
-        return;
-      }
-      // Durante rotazione e assestamento viewport riduce lavoro grafico percepito
-      sospendiTransizioniSelect(500);
-      clearTimeout(orientationStabilizeTimeout);
-      orientationStabilizeTimeout = setTimeout(() => {
-        aggiornaLegendaDebounced();
-      }, 400);
-    }
-
-    function aggiornaLegendaDebounced(force) {
-      if (isMobileDevice() && !force) {
-        segnalaLegendaDaAggiornare();
-        return;
-      }
-      clearTimeout(legendaUpdateTimeout);
-      const delay = isLandscapeCompatta() ? 360 : (isPortraitMobile() ? 260 : 120);
-      legendaUpdateTimeout = setTimeout(() => {
-        if (legendaUpdateInFrame) return;
-        legendaUpdateInFrame = true;
-        requestAnimationFrame(() => {
-          aggiornaLegenda();
-          legendaUpdateInFrame = false;
-        });
-      }, delay);
-    }
-
-    function salvaStatoInLocalStorageDebounced() {
-      clearTimeout(localStorageSaveTimeout);
-      const delay = isLandscapeCompatta() ? 850 : (isPortraitMobile() ? 650 : 250);
-      localStorageSaveTimeout = setTimeout(() => {
-        salvaStatoInLocalStorage();
-      }, delay);
-    }
-    // Caricamento automatico ultimo mese/anno lavorato
-    window.addEventListener('DOMContentLoaded', () => {
-      let ultimoMese = localStorage.getItem('ultimoMese');
-      let ultimoAnno = localStorage.getItem('ultimoAnno');
-      const oggi = new Date();
-      if (!ultimoMese) ultimoMese = (oggi.getMonth() + 1);
-      if (!ultimoAnno) ultimoAnno = oggi.getFullYear();
-      document.getElementById('mese').value = ultimoMese;
-      document.getElementById('anno').value = ultimoAnno;
-      aggiornaControlliLegendaMobile();
-      window.addEventListener('orientationchange', gestisciCambioViewportDebounced, { passive: true });
-      window.addEventListener('resize', gestisciCambioViewportDebounced, { passive: true });
-      caricaTurni();
-    });
-
-    function mostraLoader(show) {
-      const loader = document.getElementById('loader-overlay');
-      if (loader) loader.style.display = show ? 'flex' : 'none';
-    }
-
-    // --- Logica di Caricamento Ottimizzata ---
-    window.caricaTurni = function caricaTurni() {
-      const mese = document.getElementById('mese').value;
-      const anno = document.getElementById('anno').value;
-
-      if (meseCorrente && annoCorrente && String(meseCorrente) === String(mese) && String(annoCorrente) === String(anno)) {
-        // Se già caricati, non fare nulla (evita re-render e reflow inutili)
-        return;
-      }
-
-      localStorage.setItem('ultimoMese', mese);
-      localStorage.setItem('ultimoAnno', anno);
-      meseCorrente = mese;
-      annoCorrente = anno;
-
-      const cacheKey = `turni_${anno}-${mese}`;
-      const cachedData = localStorage.getItem(cacheKey);
-
-      if (cachedData) {
-        try {
-          const { turni } = JSON.parse(cachedData);
-          if (turni && turni.length > 0) {
-            console.log("Struttura tabella dalla cache, stato turni dal server...");
-            currentTurniData = turni;
-            // Carica sempre lo stato dal server (condiviso tra dispositivi)
-            mostraLoader(true);
-            fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${encodeURIComponent(anno)}&mese=${encodeURIComponent(mese)}`)
-              .then(r => r.json())
-              .then(statoSalvato => {
-                mostraTabella(turni, mese, anno, statoSalvato);
-                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
-                mostraLoader(false);
-              })
-              .catch(() => {
-                // Fallback: usa tabella senza stato
-                mostraTabella(turni, mese, anno, {});
-                mostraLoader(false);
-              });
-            return;
-          }
-        } catch (e) {
-          console.error("Cache corrotta, la rimuovo.", e);
-          localStorage.removeItem(cacheKey);
-        }
-      }
-
-      // Se non ci sono dati validi in cache, carica dal server.
-      console.log("Cache vuota o non valida. Caricamento dal server...");
-      mostraLoader(true);
-      fetch(`${APPSCRIPT_URL}?action=getStatoTurni&anno=${encodeURIComponent(anno)}&mese=${encodeURIComponent(mese)}`)
-        .then(r => r.json())
-        .then(statoSalvato => {
-          fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${encodeURIComponent(mese)}&anno=${encodeURIComponent(anno)}`)
-            .then(r => r.json())
-            .then(turni => {
-              if (Array.isArray(turni) && turni.length > 0) {
-                currentTurniData = turni;
-                mostraTabella(turni, mese, anno, statoSalvato);
-                localStorage.setItem(cacheKey, JSON.stringify({turni, stato: statoSalvato}));
-              } else {
-                document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Nessun turno trovato per questo mese/anno.</span>';
-              }
-              mostraLoader(false);
-            })
-            .catch(() => {
-              mostraLoader(false);
-              document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel caricamento dei turni!</span>';
-            });
-        })
-        .catch(() => {
-          mostraLoader(false);
-          document.getElementById('output').innerHTML = '<span style="color:#dc3545;font-weight:bold;">Errore nel recupero stato turni!</span>';
-        });
-    }
-
-    function pulisciTabella() {
-      if (!meseCorrente || !annoCorrente) return;
-      
-      const popup = document.getElementById('custom-confirm-popup');
-      const btnOk = document.getElementById('custom-confirm-ok');
-      const btnCancel = document.getElementById('custom-confirm-cancel');
-      
-      popup.style.display = 'flex';
-
-      btnOk.onclick = () => {
-        popup.style.display = 'none';
-        const cacheKey = `turni_${annoCorrente}-${meseCorrente}`;
-        localStorage.removeItem(cacheKey); // Rimuove la cache per forzare il ricaricamento pulito
-
-        currentSelections = {}; // Clear the state object
-        // Svuota tutte le select
-        document.querySelectorAll('#output select').forEach(select => { select.value = ''; updateSelectColor(select); });
-        // Salva stato vuoto su backend
-        fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ anno: Number(annoCorrente), mese: Number(meseCorrente), stato: {} })
-        });
-        aggiornaLegendaDebounced(); // Azzera la legenda visivamente
-        // Aggiorna tabella
-        caricaTurni();
-      };
-
-      btnCancel.onclick = () => {
-        popup.style.display = 'none';
-      };
-    }
-
-    function salvaTurniManuale() {
-      const mese = Number(meseCorrente || document.getElementById('mese').value);
-      const anno = Number(annoCorrente || document.getElementById('anno').value);
-      if (!mese || !anno) {
-        alert('Carica prima mese e anno.');
-        return;
-      }
-
-      clearTimeout(saveTimeout); // Evita doppio invio ravvicinato con l'auto-save
-      const statoDaSalvare = (currentSelections && typeof currentSelections === 'object') ? currentSelections : {};
-      const feedback = document.getElementById('salva-turni-feedback');
-
-      feedback.style.display = 'inline';
-      feedback.style.color = '#888';
-      feedback.textContent = isMobileDevice() ? 'Salvataggio manuale...' : 'salvataggio...';
-
-      fetch(APPSCRIPT_URL + '?action=salvaStatoTurni', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ anno, mese, stato: statoDaSalvare })
-      })
-      .then(() => {
-        salvaStatoInLocalStorage();
-        feedback.style.color = '#176d1a';
-        feedback.textContent = isMobileDevice() ? '\u2713 Turni salvati' : '\u2713 salvato';
-        setTimeout(() => { feedback.style.display = 'none'; }, 2500);
-      })
-      .catch(err => {
-        feedback.style.color = '#b80000';
-        feedback.textContent = '\u2717 errore: ' + (err && err.message ? err.message : err);
-      });
-    }
-
-    function getPasqua(anno) {
-      try {
-        const a = anno % 19, b = anno % 4, c = anno % 7, k = Math.floor(anno / 100), p = Math.floor((13 + 8 * k) / 25), q = Math.floor(k / 4);
-        const M = (15 - p + k - q) % 30, N = (4 + k - q) % 7, d = (19 * a + M) % 30, e = (2 * b + 4 * c + 6 * d + N) % 7;
-        const giorno = 22 + d + e;
-        const data = giorno > 31 ? new Date(anno, 3, giorno - 31) : new Date(anno, 2, giorno);
-        if (isNaN(data.getTime())) return null;
-        return data;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function isHoliday(date, pasqua) {
-      const g = date.getDate(), m = date.getMonth();
-      const festeFisse = [
-        {g:1,m:0},   // 1 gennaio
-        {g:6,m:0},   // 6 gennaio
-        {g:25,m:3},  // 25 aprile (corretto: aprile è 3)
-        {g:1,m:4},   // 1 maggio
-        {g:2,m:5},   // 2 giugno
         {g:15,m:7},  // 15 agosto
         {g:15,m:6},  // 15 luglio
         {g:1,m:10},  // 1 novembre
@@ -1839,4 +1407,3 @@ window.generaTabellaProgetto = function generaTabellaProgetto(mese, anno) {
   </script>
 </body>
 </html>
-
