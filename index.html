@@ -2,173 +2,140 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestione Turni</title>
-    <link rel="stylesheet" href="https://mauroventimiglia-boop.github.io/Turni-Vasco/custom-styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Turni TSRM</title>
+    <style>
+        :root {
+            --bg-va: #b3d1ff; --text-va: #0a2377;
+            --bg-pro: #b6ffd0; --text-pro: #006b2e;
+            --bg-rep: #ffd6d6; --text-rep: #b80000;
+            --bg-f: #e2e3e5;   --text-f: #444;
+        }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f4f7f6; font-size: 14px; }
+        .header { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 4px; text-align: center; overflow: hidden; }
+        
+        /* Intestazioni */
+        th { background: #eee; font-size: 12px; height: 40px; }
+        .col-giorno { width: 45px; }
+
+        /* Celle Turni: Disposizione Verticale (M, P, N) */
+        .turno-container { display: flex; flex-direction: column; gap: 2px; }
+        
+        select { 
+            width: 100%; border: 1px solid #ccc; border-radius: 3px; 
+            font-size: 12px; height: 26px; appearance: none; text-align-last: center;
+        }
+
+        /* Colori dinamici */
+        .sel-VA { background: var(--bg-va) !important; color: var(--text-va); font-weight: bold; }
+        .sel-PRO { background: var(--bg-pro) !important; color: var(--text-pro); font-weight: bold; }
+        .sel-REP { background: var(--bg-rep) !important; color: var(--text-rep); font-weight: bold; }
+        .sel-F, .sel-RC { background: var(--bg-f) !important; color: var(--text-f); }
+
+        .festivo { background: #ffebee; }
+        .festivo td:first-child { color: red; font-weight: bold; }
+
+        button { padding: 8px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; margin: 2px; }
+        .btn-load { background: #007bff; color: white; }
+        .btn-save { background: #28a745; color: white; }
+    </style>
 </head>
 <body>
 
-    <div id="loader-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center;">
-        <div class="loader">Caricamento in corso...</div>
-    </div>
-
-    <div class="header-controls">
-        <h1>Gestione Turni</h1>
-        <div class="main-actions">
-            <label>Mese:</label>
-            <select id="mese">
-                <option value="1">Gennaio</option><option value="2">Febbraio</option>
-                <option value="3">Marzo</option><option value="4">Aprile</option>
-                <option value="5">Maggio</option><option value="6">Giugno</option>
-                <option value="7">Luglio</option><option value="8">Agosto</option>
-                <option value="9">Settembre</option><option value="10">Ottobre</option>
-                <option value="11">Novembre</option><option value="12">Dicembre</option>
-            </select>
-            <label>Anno:</label>
-            <input type="number" id="anno" value="2026">
-            <button onclick="caricaTurni()" class="btn-primary">Carica Turni</button>
-            <button onclick="pulisciTabella()" class="btn-danger">Pulisci Turni Mese</button>
-            <button onclick="salvaTurniManuale()" class="btn-success">Salva Turni 💾</button>
-            <span id="salva-turni-feedback"></span>
-        </div>
+    <div class="header">
+        <strong>Mese:</strong> <input type="number" id="mese" value="4" style="width:40px">
+        <strong>Anno:</strong> <input type="number" id="anno" value="2026" style="width:60px">
+        <br><br>
+        <button class="btn-load" onclick="caricaTurni()">Carica</button>
+        <button class="btn-save" onclick="salvaTurniManuale()">Salva 💾</button>
+        <span id="feedback"></span>
     </div>
 
     <div id="output"></div>
 
-    <div id="legenda-container">
-        <div id="legenda-feedback"></div>
-        <button id="btn-aggiorna-legenda-mobile" onclick="aggiornaLegendaManuale()" style="display:none;">Aggiorna Legenda</button>
-        <div id="legenda-operatori"></div>
-    </div>
-
-    <div id="custom-confirm-popup" class="popup-overlay" style="display:none;">
-        <div class="popup-content">
-            <p>Sei sicuro di voler cancellare tutti i turni del mese corrente?</p>
-            <button id="custom-confirm-ok">Conferma</button>
-            <button id="custom-confirm-cancel">Annulla</button>
-        </div>
-    </div>
-
-    <div id="preview-container"></div>
-    <div id="feedback-message" style="display:none;"></div>
-    <div id="reperibilita-container"></div>
-
     <script>
-        const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbygfswYatsxqiZrZoVDDZzo20XolahNbEyaUg9Zq0wp9jxSt-0ltxyL2nzYirgnoBJ-KQ/exec";
+        const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbygfswYatsxqiZrZoVDDZzo20XolahNbEyaUg9Zq0wp9jxSt-0ltxyL2nzYirgnoBJ-KQ/exec"; 
         const NOMI = ["MACALUSO", "DINOLFO", "NAPOLI", "VENTIMIGLIA"];
-        const GIORNI_SETT = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-        const MESI_RR = [7, 12];
-
         let currentSelections = {};
-        let currentTurniData = [];
-        let meseCorrente, annoCorrente;
 
         async function caricaTurni() {
-            const mese = document.getElementById('mese').value;
-            const anno = document.getElementById('anno').value;
-            mostraLoader(true);
+            const m = document.getElementById('mese').value;
+            const a = document.getElementById('anno').value;
+            const out = document.getElementById('output');
+            out.innerHTML = "Caricamento...";
+
             try {
-                const resTurni = await fetch(`${APPSCRIPT_URL}?action=getTurniMese&mese=${mese}&anno=${anno}`);
-                const dataTurni = await resTurni.json();
-                const resStato = await fetch(`${APPSCRIPT_URL}?action=getStatoTurni&mese=${mese}&anno=${anno}`);
-                const dataStato = await resStato.json();
-                if (dataTurni.ok) {
-                    currentTurniData = dataTurni.data;
-                    meseCorrente = mese;
-                    annoCorrente = anno;
-                    mostraTabella(currentTurniData, mese, anno, dataStato.stato || {});
-                } else {
-                    document.getElementById('output').innerHTML = "Nessun dato trovato.";
+                const r = await fetch(${APPSCRIPT_URL}?action=getStatoTurni&mese=${m}&anno=${a});
+                const j = await r.json();
+                const stato = j.ok ? j.stato : {};
+                
+                // Generiamo i giorni (30 o 31)
+                const giorniInMese = new Date(a, m, 0).getDate();
+                let html = <table><tr><th class="col-giorno">Giorno</th>;
+                NOMI.forEach(n => html += <th>${n.substring(0,4)}</th>);
+                html += </tr>;
+
+                for(let g=1; g<=giorniInMese; g++) {
+                    const data = new Date(a, m-1, g);
+                    const isF = data.getDay() === 0; 
+                    const labelG = g + " " + ["D","L","M","M","G","V","S"][data.getDay()];
+                    
+                    html += <tr class="${isF ? 'festivo' : ''}"><td>${labelG}</td>;
+                    
+                    NOMI.forEach(n => {
+                        html += <td><div class="turno-container">;
+                        // Creiamo 3 select per cella: Mattina, Pomeriggio, Notte
+                        ['m','p','n'].forEach(f => {
+                            const id = ${f}_${g}_${n};
+                            const val = stato[id] || "";
+                            html += `<select id="${id}" class="sel-${val}" onchange="updateStyle(this)">
+                                        ${getOptions(val)}
+                                     </select>`;
+                        });
+                        html += </div></td>;
+                    });
+                    html += </tr>;
                 }
-            } catch (e) {
-                console.error(e);
-                alert("Errore nel caricamento dati.");
-            }
-            mostraLoader(false);
+                out.innerHTML = html + </table>;
+            } catch(e) { out.innerHTML = "Errore connessione!"; }
+        }
+
+        function getOptions(selected) {
+            const opt = ["", "1", "2", "VA", "PRO", "REP", "F", "RC"];
+            return opt.map(o => <option value="${o}" ${o===selected?'selected':''}>${o||'-'}</option>).join('');
+        }
+
+        function updateStyle(s) {
+            s.className = sel-${s.value};
+            currentSelections[s.id] = s.value;
         }
 
         async function salvaTurniManuale() {
-            const feedback = document.getElementById('salva-turni-feedback');
-            feedback.textContent = "Salvataggio...";
-            feedback.style.display = "inline";
+            const f = document.getElementById('feedback');
+            f.textContent = "Salvataggio...";
+            
+            // Raccogliamo tutti i valori delle select
+            const selects = document.querySelectorAll('select');
+            const stato = {};
+            selects.forEach(s => { if(s.value) stato[s.id] = s.value; });
+
             try {
                 await fetch(APPSCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({
                         action: "salvaStatoTurni",
-                        mese: meseCorrente,
-                        anno: annoCorrente,
-                        stato: currentSelections
+                        mese: document.getElementById('mese').value,
+                        anno: document.getElementById('anno').value,
+                        stato: stato
                     })
                 });
-                feedback.textContent = "✓ Salvato!";
-                setTimeout(() => feedback.style.display = "none", 2000);
-            } catch (e) {
-                feedback.textContent = "X Errore";
-            }
-        }
-
-        function mostraTabella(turni, mese, anno, statoSalvato) {
-            const output = document.getElementById('output');
-            let html = `<table><tr><th>Giorno</th>`;
-            NOMI.forEach(n => html += `<th colspan="3">${n}</th>`);
-            html += `</tr>`;
-            turni.forEach(t => {
-                const data = new Date(anno, mese - 1, t.giorno);
-                const giornoSett = GIORNI_SETT[data.getDay()];
-                const isFestivo = data.getDay() === 0;
-                html += `<tr class="${isFestivo ? 'festivo' : ''}"><td>${t.giorno} ${giornoSett}</td>`;
-                NOMI.forEach(nome => {
-                    const idM = `mattina_${t.giorno}_${nome}`;
-                    const idP = `pomeriggio_${t.giorno}_${nome}`;
-                    const idN = `notte_${t.giorno}_${nome}`;
-                    html += `
-                        <td><select id="${idM}" onchange="updateVal('${idM}', this.value)">${getOptions('M', statoSalvato[idM])}</select></td>
-                        <td><select id="${idP}" onchange="updateVal('${idP}', this.value)">${getOptions('P', statoSalvato[idP])}</select></td>
-                        <td><select id="${idN}" onchange="updateVal('${idN}', this.value)">${getOptions('N', statoSalvato[idN])}</select></td>
-                    `;
-                    currentSelections[idM] = statoSalvato[idM] || "";
-                    currentSelections[idP] = statoSalvato[idP] || "";
-                    currentSelections[idN] = statoSalvato[idN] || "";
-                });
-                html += `</tr>`;
-            });
-            html += `</table>`;
-            output.innerHTML = html;
-            aggiornaLegenda();
-        }
-
-        function getOptions(fascia, prefill = "") {
-            const basi = ["", "F", "RC", "VA", "PRO", "REP", "1", "2"];
-            return basi.map(opt => `<option value="${opt}" ${opt === prefill ? 'selected' : ''}>${opt}</option>`).join('');
-        }
-
-        function updateVal(id, val) {
-            currentSelections[id] = val;
-            aggiornaLegenda();
-        }
-
-        function mostraLoader(show) {
-            document.getElementById('loader-overlay').style.display = show ? 'flex' : 'none';
-        }
-
-        function aggiornaLegenda() {
-            let html = "";
-            NOMI.forEach(n => {
-                let contaVA = Object.entries(currentSelections)
-                    .filter(([id, val]) => id.endsWith(n) && val === "VA").length;
-                html += `<span><strong>${n}:</strong> VA(${contaVA})</span> | `;
-            });
-            document.getElementById('legenda-operatori').innerHTML = html;
-        }
-
-        function pulisciTabella() {
-            if(confirm("Sei sicuro di voler cancellare i turni visualizzati?")) {
-                document.querySelectorAll('select').forEach(s => s.value = "");
-                currentSelections = {};
-                aggiornaLegenda();
-            }
+                f.textContent = " ✓ Salvato";
+                setTimeout(() => f.textContent = "", 2000);
+            } catch(e) { f.textContent = " Errore!"; }
         }
     </script>
 </body>
