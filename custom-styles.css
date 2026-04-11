@@ -1,3 +1,39 @@
+/* Celle tabella turni ancora più compatte */
+.table-container table {
+  font-size: 0.88em;
+  border-collapse: collapse;
+}
+.table-container th, .table-container td {
+  padding: 1px 2px !important;
+  min-width: 18px;
+  max-width: 32px;
+  text-align: center;
+  height: 22px;
+}
+.table-container select {
+  font-size: 0.88em;
+  padding: 0 1px;
+  min-width: 22px;
+  max-width: 32px;
+  height: 20px;
+}
+/* Celle tabella turni più compatte */
+.table-container table {
+  font-size: 0.95em;
+  border-collapse: collapse;
+}
+.table-container th, .table-container td {
+  padding: 2px 4px !important;
+  min-width: 28px;
+  max-width: 50px;
+  text-align: center;
+}
+.table-container select {
+  font-size: 0.95em;
+  padding: 1px 2px;
+  min-width: 32px;
+  max-width: 48px;
+}
 .legend-count-blue { color: #a65c00; font-weight: bold; }
 .legend-count-purple { color: #4b2e83; font-weight: bold; }
 .legend-count-va { color: #0a2377; font-weight: bold; }
